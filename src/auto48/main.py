@@ -9,10 +9,14 @@ from fastapi.responses import JSONResponse
 from auto48 import models as _models  # noqa: F401  (register all ORM metadata)
 from auto48.api.routers import (
     auth,
+    billing,
     conversations,
+    feeds,
     health,
     listings,
     photos,
+    saved_searches,
+    valuations,
     vehicles,
 )
 from auto48.config import get_settings
@@ -55,6 +59,10 @@ def create_app() -> FastAPI:
     app.include_router(vehicles.router)
     app.include_router(photos.router)
     app.include_router(conversations.router)
+    app.include_router(valuations.router)
+    app.include_router(feeds.router)
+    app.include_router(billing.router)
+    app.include_router(saved_searches.router)
     return app
 
 

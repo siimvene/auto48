@@ -55,10 +55,12 @@ RIA/TARA eID application; local `create_all`→Alembic. **Next: Phase 1b.**
 - [x] Wire auth (`CurrentUser`) into photos (ownership-checked) and messaging (buyer/sender from token); mypy `--strict` clean; full suite 57 passing
 - [ ] Replace local `create_all` with `alembic upgrade head` — **deferred by decision**: `create_all` is gated to `environment == "local"` (dev/test convenience only); production already uses Alembic. Revisit if local/prod parity is needed.
 
-### Phase 1b task seeds
-- [ ] Dealer accounts + `FeedPort` + one dealer feed format ingested by a worker
-- [ ] `PaymentPort` (Stripe Connect): dealer subscriptions + paid promotions
-- [ ] `ValuationPort` v0 (own-listing comparables) + deal-score badge
-- [ ] Saved search + basic email alert (`NotifyPort`)
+### Phase 1b task seeds — complete (backend)
+- [x] Dealer accounts + `FeedPort` (CSV/JSON) + ingest worker + `/v1/dealer/feeds` (dealer-only, VIN upsert, IngestRun tracking)
+- [x] `PaymentPort` (Stripe adapter + stub): dealer subscriptions + listing promotions (`/v1/billing/*`, ownership-checked)
+- [x] `ValuationPort` v0 (own-listing comparables, median + p25/p75 band) + deal-score (`/v1/valuations`)
+- [x] Saved search + email alert (`NotifyPort` SMTP/stub) + alerts worker (`/v1/saved-searches`)
+- [x] Single Alembic migration for the 6 new tables; full suite 97 passing, mypy `--strict` clean, 28 routes
+- [ ] Frontend surfaces for 1b (dealer feed mgmt, deal-score badge wired to `/v1/valuations`, saved-search UI) — next frontend pass
 
 > Update this file (don't assume prerequisites) before planning new work.

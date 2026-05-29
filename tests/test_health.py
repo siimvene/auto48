@@ -5,18 +5,21 @@ async def test_health(client):
 
 
 async def test_listings_crud_and_pagination(client, seller_id):
+    # Unique make so the filtered count is immune to other modules' seeds in the
+    # shared test database (every test module shares one SQLite file).
+    unique_make = "Healthcomark"
     created = await client.post(
         "/v1/listings",
         json={
             "seller_id": seller_id,
-            "title": "2019 Toyota Corolla 1.8 Hybrid",
+            "title": "2019 Healthco Corolla 1.8 Hybrid",
             "description": "One owner, full service history.",
             "price_eur_cents": 1499000,
             "mileage_km": 82000,
             "location_county": "Harjumaa",
             "vehicle": {
                 "vin": "JTDBR32E720123456",
-                "make": "Toyota",
+                "make": unique_make,
                 "model": "Corolla",
                 "variant": "1.8 Hybrid",
                 "year": 2019,
@@ -32,12 +35,12 @@ async def test_listings_crud_and_pagination(client, seller_id):
     listing_id = created_body["id"]
     assert created_body["status"] == "draft"
     assert created_body["price_eur_cents"] == 1499000
-    assert created_body["vehicle"]["make"] == "Toyota"
+    assert created_body["vehicle"]["make"] == unique_make
 
-    page = await client.get("/v1/listings", params={"limit": 10, "make": "Toyota"})
+    page = await client.get("/v1/listings", params={"limit": 10, "make": unique_make})
     body = page.json()
     assert body["total"] == 1
-    assert body["items"][0]["vehicle"]["make"] == "Toyota"
+    assert body["items"][0]["vehicle"]["make"] == unique_make
 
     one = await client.get(f"/v1/listings/{listing_id}")
     assert one.status_code == 200

@@ -37,6 +37,17 @@ class Settings(BaseSettings):
     # Redis URL used by arq workers and job enqueueing.
     redis_url: str = "redis://localhost:6379/0"
 
+    # Stripe (Phase 1b: dealer subscriptions + promotions). Empty → StubPaymentAdapter.
+    stripe_secret_key: str = ""
+    stripe_webhook_secret: str = ""
+
+    # SMTP for saved-search alert emails (Phase 1b). Empty host → StubNotifyAdapter.
+    smtp_host: str = ""
+    smtp_port: int = 587
+    smtp_user: str = ""
+    smtp_password: str = ""
+    email_from: str = "auto48 <noreply@auto48.ee>"
+
 
 @lru_cache
 def get_settings() -> Settings:
