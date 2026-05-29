@@ -5,9 +5,10 @@ no module-level singleton. Use the `get_settings()` factory (cached) everywhere.
 """
 
 from functools import lru_cache
+from typing import Annotated
 
 from pydantic import field_validator
-from pydantic_settings import BaseSettings, SettingsConfigDict
+from pydantic_settings import BaseSettings, NoDecode, SettingsConfigDict
 
 
 class Settings(BaseSettings):
@@ -20,7 +21,10 @@ class Settings(BaseSettings):
     # Browser origins allowed to call the API (the Nuxt frontend runs on a
     # different origin in dev). Override via AUTO48_CORS_ORIGINS as a
     # comma-separated list in real environments. Never use "*" with credentials.
-    cors_origins: list[str] = [
+    # NoDecode: stop pydantic-settings from JSON-decoding the env value so the
+    # comma-split validator below can parse a plain CSV string (e.g.
+    # "https://kekec.ee,https://www.kekec.ee") without a SettingsError.
+    cors_origins: Annotated[list[str], NoDecode] = [
         "http://localhost:3000",
         "http://localhost:3001",
         "http://localhost:3002",

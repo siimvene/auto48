@@ -43,3 +43,24 @@ class WorkerSettings:
     functions = [process_image]
     redis_settings = RedisSettings.from_dsn(get_settings().redis_url)  # class attribute
 ```
+
+### Mistake: pydantic-settings list[str] env var crashes app on startup
+A `list[str]` settings field is **JSON-decoded** by pydantic-settings' env source
+*before* any `field_validator(mode="before")` runs. So setting a comma-separated
+env value (e.g. `AUTO48_CORS_ORIGINS=https://kekec.ee,https://www.kekec.ee`)
+raises `SettingsError: error parsing value for field ...` and the app won't boot —
+silent until something actually sets the env var (e.g. production). Annotate the
+field with `NoDecode` so the raw string reaches the CSV-splitting validator.
+
+**Wrong**:
+```python
+cors_origins: list[str] = [...]
+@field_validator("cors_origins", mode="before")  # never runs for a non-JSON env string
+```
+
+**Correct**:
+```python
+from pydantic_settings import NoDecode
+cors_origins: Annotated[list[str], NoDecode] = [...]
+@field_validator("cors_origins", mode="before")  # now receives the raw CSV string
+```
