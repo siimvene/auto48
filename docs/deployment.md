@@ -8,9 +8,14 @@
 | | |
 |---|---|
 | **Host (IP)** | `178.105.234.239` |
-| **OS** | Ubuntu |
+| **Hostname** | `ubuntu-4gb-nbg1-2` |
+| **Provider** | Hetzner Cloud — 4 GB instance, Nuremberg (nbg1) |
+| **OS** | Ubuntu 24.04 LTS (kernel 6.8) |
 | **SSH user** | `ubuntu` |
 | **Auth** | SSH key pair (`ed25519`), password auth disabled |
+
+> Verified reachable: TCP/22 open and key-based login succeeds. ICMP ping is
+> filtered (expected) — use the SSH check below to confirm reachability.
 
 ### SSH access
 

@@ -1,7 +1,7 @@
 ---
 id: ms_01KSTAF67CJRTE7PNTNWHJXW7M
 type: fact
-state: active
+state: corrected
 confidence: 0.7
 created: '2026-05-29T16:53:21.259Z'
 source: claude
@@ -11,6 +11,7 @@ tags:
   - ssh
   - production
 decay_after: '2026-08-27T16:53:21.261Z'
+corrected_by: ms_01KSTAT94VR98F1RQ1MZFYDKYT
 ---
 # Production deploy: VPS 178.105.234.239 (Ubuntu), SSH user ubuntu, key auto48_deploy
 
