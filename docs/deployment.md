@@ -93,12 +93,27 @@ sudo docker compose -f docker-compose.prod.yml logs -f db
 sudo docker compose -f docker-compose.prod.yml --env-file .env up -d   # apply changes
 ```
 
+## TLS (Let's Encrypt)
+
+Done — `https://kekec.ee` serves a publicly-trusted Let's Encrypt certificate
+(`kekec.ee` + `www.kekec.ee`, ~90-day profile). `deploy/obtain-cert.sh` obtains it via
+the `http-01` webroot challenge (`/var/www/certbot`, served by the `acme.conf` nginx
+snippet) and swaps nginx to `deploy/nginx/auto48-tls.conf`. The certbot snap timer renews
+automatically; a deploy-hook (`/etc/letsencrypt/renewal-hooks/deploy/reload-nginx.sh`)
+reloads nginx after each renewal. nginx redirects `http://` and `www.` → `https://kekec.ee`.
+
+> An earlier bare-IP certificate for `178.105.234.239` was issued first (Let's Encrypt's
+> **`shortlived` ~6-day profile**, required for IP certs) — kept as a fallback lineage.
+> Verify: `ssh auto48-prod 'sudo certbot certificates'`.
+
+To re-run on a fresh box or new domain: `sudo bash deploy/obtain-cert.sh` (edit the
+`server_name`/cert paths + the `-d` domains, or `--ip-address`, as needed).
+
 ### Not yet done (deploy step)
 
 - **App code** (FastAPI + Nuxt) is not deployed yet — nginx upstreams `127.0.0.1:8000`
-  (backend) and `:3000` (frontend) are configured and waiting.
-- **TLS**: point a domain at `178.105.234.239`, set `server_name` in
-  `/etc/nginx/sites-available/auto48.conf`, then `sudo certbot --nginx -d <domain>`.
+  (backend) and `:3000` (frontend) are configured and waiting. No app service unit,
+  Python venv, or Node runtime exists on the box yet.
 - **Migrations**: run **Alembic** as a deploy step (`alembic upgrade head`) — never
   `create_all` on startup outside `local`.
 
