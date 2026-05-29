@@ -1,0 +1,81 @@
+---
+description: E2E test logging standards with structured prefixes and sensitive data protection
+globs: **/*.spec.ts
+alwaysApply: true
+---
+
+# E2E Test Logging Guidelines
+
+## Context
+
+- When implementing logging in Playwright E2E tests for CI/CD environments
+- When ensuring traceability and debugging capability in automated test runs
+- When following SiMi directive requirements for production test logs
+
+## Requirements
+
+- Use standard `console.log` mechanism for CI/CD pipeline logging
+- Structure logs with clear prefixes for automated filtering and analysis
+- Log critical test steps and assertion checks for failure diagnosis
+- Never log sensitive data (passwords, tokens, keys) in CI/CD logs
+- Keep logs concise but informative for automated environments
+- Ensure logs are machine-readable and searchable in CI/CD systems
+
+## Log Prefixes
+
+Use structured prefixes for different log types:
+
+- `[SETUP_CHECK]` - Test precondition checking
+- `[NAVIGATE]` - Page navigation actions
+- `[TEST_STEP]` - Specific test steps
+- `[ASSERTION_CHECK]` - Assertion verification
+- `[DATA]` - Test data creation/modification
+- `[API_REQUEST]` - API request information
+- `[API_RESPONSE]` - API response status/data
+- `[ERROR]` - Error occurrences
+
+## Log Format for CI/CD
+
+```text
+[PREFIX] Descriptive message. { "key": "value" }
+```
+
+**CI/CD Considerations:**
+- Logs should be parseable by automated systems
+- Include timestamps for correlation with CI/CD pipeline events
+- Use consistent formatting for log aggregation tools
+- Avoid excessive nested JSON that bloats CI/CD logs
+
+## Examples
+
+<example>
+**Good logging practice:**
+```typescript
+console.log('[TEST_STEP] Checking table visibility.');
+await expect(userListPage.userTable).toBeVisible();
+
+console.log('[ASSERTION_CHECK] Checking pagination text. Expected: "50", Actual: "25"');
+await expect(page.getByText('50')).toBeVisible();
+```
+</example>
+
+<example type="invalid">
+**Never log sensitive data:**
+```typescript
+// ❌ WRONG - exposes sensitive information
+console.log(`[LOGIN] User password: ${password}`);
+console.log(`[API] Token: ${authToken}`);
+```
+</example>
+
+## Critical Rules for CI/CD
+
+- Use structured prefixes for all log entries to enable automated log parsing
+- Never log passwords, tokens, or sensitive data in CI/CD environments
+- Log critical test steps and assertion checks for automated failure analysis
+- Keep logs machine-readable and searchable in CI/CD systems
+- Use English for consistency across automated environments
+- Log API response status but not full response bodies to avoid log bloat
+- Focus on logs that help diagnose failures in automated test runs
+- Include expected vs actual values in assertion logs for CI/CD debugging
+- Minimize verbose logging to reduce CI/CD log storage and processing costs

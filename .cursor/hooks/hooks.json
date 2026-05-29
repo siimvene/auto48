@@ -1,0 +1,17 @@
+{
+  "version": 1,
+  "hooks": {
+    "beforeSubmitPrompt": [
+      {
+        "command": "./check-readfile-secrets.sh",
+        "timeout": 30
+      }
+    ],
+    "beforeReadFile": [
+      {
+        "command": "./check-readfile-secrets.sh",
+        "timeout": 30
+      }
+    ]
+  }
+}

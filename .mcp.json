@@ -1,0 +1,11 @@
+{
+  "mcpServers": {
+    "memspec": {
+      "command": "memspec-mcp",
+      "args": [
+        "--cwd",
+        "/Users/siim/git/auto48"
+      ]
+    }
+  }
+}

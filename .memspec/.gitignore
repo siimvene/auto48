@@ -1,0 +1,4 @@
+# Derived search index — rebuildable from files
+*.db
+*.db-journal
+*.db-wal

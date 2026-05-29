@@ -1,0 +1,46 @@
+# Memspec configuration
+# Files are canonical. Derived indexes are disposable.
+
+classification:
+  llm: false
+  fallback: rules
+
+decay:
+  fact: 90d
+  decision: 180d
+  procedure: 90d
+  observation: 7d
+
+profiles:
+  default:
+    max_tokens: 2000
+    types: [fact, decision, procedure]
+    min_confidence: 0.7
+    ranking:
+      relevance: 0.4
+      confidence: 0.3
+      recency: 0.3
+
+# Stabilization gate (optional)
+# When enabled, new memories start as captured and require confirmations
+# before promotion to active state.
+# stabilization:
+#   enabled: true
+#   min_confirmations: 2
+#   auto_promote_confidence: 0.9
+
+# Store composition (optional)
+# Layer multiple stores with precedence. Higher priority wins on conflicts.
+# stores:
+#   - name: global
+#     path: ~/.memspec
+#     priority: 0
+#     writable: true
+#   - name: project
+#     path: .memspec
+#     priority: 10
+#     writable: true
+
+# engine: fts5 (default) | hybrid (requires embeddings config -- future feature)
+search:
+  engine: fts5

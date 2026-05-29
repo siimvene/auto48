@@ -1,0 +1,46 @@
+---
+description: Use --no-pager flag with Git commands to prevent pager activation and ensure direct output
+globs: **/*
+alwaysApply: true
+---
+
+# Git Commands Best Practices
+
+## Context
+- **MUST READ THIS RULE** before using any Git commands in terminal operations
+- When analyzing Git repository state
+- When running Git commands that might trigger a pager
+- When automating Git operations
+- When performing Git repository analysis or comparisons
+
+## Requirements
+- Use `--no-pager` flag with Git commands that might trigger a pager
+- Ensure direct output without user intervention
+- Apply to log, diff, show, and other commands that display content
+
+## Examples
+
+<example>
+# Good: Using --no-pager flag
+git --no-pager log --oneline -10
+git --no-pager diff --stat develop..HEAD
+git --no-pager show --stat HEAD
+git --no-pager diff --name-only develop..HEAD
+git --no-pager log --graph --oneline
+</example>
+
+<example type="invalid">
+# Bad: Commands that may trigger pager
+git log --oneline -10  # May trigger pager
+git diff --stat develop..HEAD  # May trigger pager
+git show --stat HEAD  # May trigger pager
+git log --graph --oneline  # May trigger pager
+</example>
+
+## Critical Rules
+- **ALWAYS READ THIS RULE FIRST** before executing any Git commands
+- ALWAYS use `--no-pager` flag with Git commands that might trigger a pager
+- ALWAYS use `--no-pager` with log, diff, show, and similar commands
+- NEVER assume Git commands will output directly without pager
+- NEVER execute Git commands without checking this rule first
+- ALWAYS ensure direct output for automated operations

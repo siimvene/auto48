@@ -1,0 +1,166 @@
+---
+description: Playwright TypeScript E2E testing standards with POM patterns and deterministic test practices
+globs: **/*.spec.ts
+alwaysApply: true
+---
+
+# Playwright E2E Testing Guidelines
+
+## Context
+
+- When writing E2E tests using Playwright and TypeScript
+- When implementing Page Object Model patterns
+- When ensuring test stability and maintainability
+
+## Requirements
+
+- Use deterministic tests independent of external factors
+- Implement practical helper functions over complex abstractions
+- Follow `*.spec.ts` file naming convention
+- Prefer accessibility-first locators (`getByRole`, `getByLabel`, `getByText`)
+- Centralize selectors to reduce magic strings
+- Avoid `test.only()` and `test.skip()` in commits
+- Ensure test isolation and cleanup
+- Generate test data dynamically to avoid conflicts
+- Use environment variables for credentials and configuration
+
+## Best Practices
+
+### Selector Strategy
+
+- **Prefer accessibility-first locators:**
+  ```typescript
+  // ✅ Good - semantic and stable
+  await page.getByRole('button', { name: 'Submit' }).click();
+  await page.getByLabel('Email address').fill('test@example.com');
+  ```
+
+- **Centralize complex selectors:**
+  ```typescript
+  const SELECTORS = {
+    auth: {
+      userDropdown: '#user-icon-menu-trigger',
+      loginLink: 'div[role="tooltip"] a[href*="/login"]'
+    }
+  } as const;
+  ```
+
+- **Use test attributes as fallback:**
+  ```typescript
+  await page.locator('[data-testid="specific-component"]').click();
+  ```
+
+### Helper Functions
+
+- **Create simple, reusable helpers:**
+  ```typescript
+  async function loginUser(page: Page): Promise<void> {
+    const env = getTestEnv();
+    await page.goto('/');
+    await page.locator(SELECTORS.auth.userDropdown).click();
+    // ... login logic
+  }
+
+  function createTestEmail(): string {
+    return `test-${Date.now()}@example.com`;
+  }
+  ```
+
+### Console Monitoring
+
+- **Setup console monitoring for debugging:**
+  ```typescript
+  page.on('console', (msg) => {
+    console.log(`BROWSER CONSOLE [${msg.type().toUpperCase()}]: ${msg.text()}`);
+  });
+  ```
+
+### Network Handling
+
+- **Wait for network requests when needed:**
+  ```typescript
+  async function waitForApiCall(page: Page, urlPattern: string): Promise<void> {
+    await page.waitForResponse(response => 
+      response.url().includes(urlPattern) && response.status() === 200
+    );
+  }
+  ```
+
+### Error Handling
+
+- **Add proper timeouts and error context:**
+  ```typescript
+  await expect(page.locator(selector)).toBeVisible({ timeout: 10000 });
+  
+  // Take screenshot on error for debugging
+  await page.screenshot({ 
+    path: `test-results/error-${context}.png`,
+    fullPage: true 
+  });
+  ```
+
+## Examples
+
+<example>
+**Good: Complete test with helpers and proper structure**
+```typescript
+test.describe('Newsletter Signup', () => {
+  test.beforeEach(async ({ page }) => {
+    // Setup console monitoring
+    page.on('console', (msg) => {
+      console.log(`BROWSER CONSOLE [${msg.type().toUpperCase()}]: ${msg.text()}`);
+    });
+    await page.goto('/');
+  });
+
+  test('should submit newsletter signup successfully', async ({ page }) => {
+    const testEmail = createTestEmail();
+    
+    // Use accessibility-first locators
+    await page.getByLabel('Email address').fill(testEmail);
+    await page.getByRole('button', { name: 'Subscribe' }).click();
+    
+    // Wait for API call and verify success
+    await waitForApiCall(page, '/api/newsletter');
+    await expect(page.getByText('Thank you for subscribing!')).toBeVisible();
+    
+    // Verify form was cleared
+    await expect(page.getByLabel('Email address')).toHaveValue('');
+  });
+});
+```
+</example>
+
+<example type="invalid">
+**Bad: Magic strings, hardcoded data, no error handling**
+```typescript
+test('login test', async ({ page }) => {
+  await page.goto('/');
+  await page.locator('#user-icon-menu-trigger').click(); // Magic string
+  await page.fill('#username', 'hardcoded@example.com'); // Hardcoded data
+  await page.click('.btn-submit'); // Fragile CSS selector
+  // No assertions or error handling
+});
+```
+</example>
+
+## Critical Rules
+
+- **Keep it simple** - Avoid over-engineering with complex abstractions
+- **Use accessibility-first locators** when possible (`getByRole`, `getByLabel`, `getByText`)
+- **Centralize selectors** to reduce magic strings and improve maintainability
+- **Create simple helper functions** for repeated operations (login, form filling)
+- **Generate test data dynamically** to avoid conflicts and improve reliability
+- **Use environment variables** for credentials and configuration
+- **Add proper error handling** with timeouts and try/catch where needed
+- **Include console monitoring** for debugging browser issues
+- **Wait for network requests** when testing API-dependent features
+- **Write descriptive test names** that explain what the user can do
+- **Group related tests** in describe blocks with proper setup/teardown
+- **Take screenshots on failure** for debugging
+- **Prefer simple functions over classes** unless complexity truly warrants it
+- **Focus on readability** - tests should be easy to understand and maintain
+- **Never use `any` type** - use specific types or interfaces
+- **Avoid `waitForTimeout`** for synchronization without justification
+- **Ensure `forbidOnly`** is enabled in `playwright.config`
+- **Never log sensitive data** (passwords, tokens, keys)
