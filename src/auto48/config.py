@@ -20,6 +20,23 @@ class Settings(BaseSettings):
     # set AUTO48_DATABASE_URL to a postgresql+asyncpg://... DSN in real envs.
     database_url: str = "sqlite+aiosqlite:///./auto48.db"
 
+    # JWT configuration — override AUTO48_JWT_SECRET in non-local environments.
+    jwt_secret: str = "dev-insecure-change-me"
+    jwt_expire_minutes: int = 60
+
+    # Vehicle-data API (carVertical / autoDNA). Leave empty to use StubAdapter.
+    vehicle_data_api_url: str = ""
+    vehicle_data_api_key: str = ""
+
+    # S3-compatible object storage (MinIO / AWS S3).  All empty → StubMediaAdapter.
+    s3_endpoint: str = ""
+    s3_access_key: str = ""
+    s3_secret_key: str = ""
+    s3_bucket: str = "auto48-media"
+
+    # Redis URL used by arq workers and job enqueueing.
+    redis_url: str = "redis://localhost:6379/0"
+
 
 @lru_cache
 def get_settings() -> Settings:

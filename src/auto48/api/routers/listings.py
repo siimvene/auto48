@@ -8,14 +8,15 @@ persists Vehicle + Listing together.
 from typing import Annotated
 
 from fastapi import APIRouter, HTTPException, Query, status
-from sqlalchemy import func, select
+from sqlalchemy import select
 from sqlalchemy.orm import selectinload
 
 from auto48.api.dependencies import DbSession
-from auto48.models.listing import Listing
+from auto48.models.listing import Listing, ListingStatus
 from auto48.models.schemas import ListingCreate, ListingResponse, Page
 from auto48.models.seller import SellerProfile
-from auto48.models.vehicle import Vehicle
+from auto48.models.vehicle import BodyType, FuelType, Transmission, Vehicle
+from auto48.services.search import build_count_query, build_filters, build_listing_query
 
 router = APIRouter(prefix="/v1/listings", tags=["listings"])
 
@@ -23,26 +24,79 @@ router = APIRouter(prefix="/v1/listings", tags=["listings"])
 @router.get("", response_model=Page)
 async def list_listings(
     db: DbSession,
+    # text / substring filters
+    make: Annotated[
+        str | None,
+        Query(description="Substring match on vehicle make (case-insensitive)"),
+    ] = None,
+    model: Annotated[
+        str | None,
+        Query(description="Substring match on vehicle model (case-insensitive)"),
+    ] = None,
+    q: Annotated[
+        str | None,
+        Query(description="Free-text over title and vehicle make/model/variant"),
+    ] = None,
+    location: Annotated[
+        str | None,
+        Query(description="Substring match on location_county (case-insensitive)"),
+    ] = None,
+    # year range
+    year_min: Annotated[int | None, Query(ge=1900, le=2100)] = None,
+    year_max: Annotated[int | None, Query(ge=1900, le=2100)] = None,
+    # price range (in EUR cents)
+    price_min: Annotated[
+        int | None, Query(ge=0, description="Minimum price in EUR cents")
+    ] = None,
+    price_max: Annotated[
+        int | None, Query(ge=0, description="Maximum price in EUR cents")
+    ] = None,
+    # mileage cap
+    mileage_max: Annotated[
+        int | None, Query(ge=0, description="Maximum mileage in km")
+    ] = None,
+    # enum equality filters
+    fuel: Annotated[FuelType | None, Query(description="Fuel type filter")] = None,
+    body: Annotated[BodyType | None, Query(description="Body type filter")] = None,
+    transmission: Annotated[
+        Transmission | None, Query(description="Transmission type filter")
+    ] = None,
+    # optional status filter — all statuses returned by default
+    status: Annotated[
+        ListingStatus | None,
+        Query(description="Filter by listing status; returns all statuses if omitted"),
+    ] = None,
+    # sort and pagination
+    sort: Annotated[
+        str,
+        Query(
+            description=(
+                "Sort order: newest (default), price_asc, price_desc,"
+                " year_desc, mileage_asc"
+            )
+        ),
+    ] = "newest",
     limit: Annotated[int, Query(ge=1, le=100)] = 25,
     offset: Annotated[int, Query(ge=0)] = 0,
-    make: str | None = None,
 ) -> Page:
-    where = [Vehicle.make == make] if make else []
+    filters = build_filters(
+        make=make,
+        model=model,
+        year_min=year_min,
+        year_max=year_max,
+        price_min=price_min,
+        price_max=price_max,
+        mileage_max=mileage_max,
+        fuel=fuel,
+        body=body,
+        transmission=transmission,
+        location=location,
+        q=q,
+        status=status,
+    )
 
-    count_stmt = select(func.count()).select_from(Listing).join(Listing.vehicle)
-    total = await db.scalar(count_stmt.where(*where))
-
-    rows = (
-        await db.scalars(
-            select(Listing)
-            .join(Listing.vehicle)
-            .where(*where)
-            .options(selectinload(Listing.vehicle))
-            .order_by(Listing.created_at.desc())
-            .limit(limit)
-            .offset(offset)
-        )
-    ).all()
+    total = await db.scalar(build_count_query(filters))
+    rows = (await db.scalars(build_listing_query(filters, sort, limit, offset))).all()
 
     return Page(
         items=[ListingResponse.model_validate(r) for r in rows],

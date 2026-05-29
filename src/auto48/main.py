@@ -6,7 +6,14 @@ from fastapi import FastAPI, HTTPException, Request
 from fastapi.responses import JSONResponse
 
 from auto48 import models as _models  # noqa: F401  (register all ORM metadata)
-from auto48.api.routers import health, listings
+from auto48.api.routers import (
+    auth,
+    conversations,
+    health,
+    listings,
+    photos,
+    vehicles,
+)
 from auto48.config import get_settings
 from auto48.db import Base, engine
 
@@ -42,7 +49,11 @@ def create_app() -> FastAPI:
         )
 
     app.include_router(health.router)
+    app.include_router(auth.router)
     app.include_router(listings.router)
+    app.include_router(vehicles.router)
+    app.include_router(photos.router)
+    app.include_router(conversations.router)
     return app
 
 

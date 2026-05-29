@@ -40,15 +40,17 @@ Locked decisions: **both-supply** (dealer feeds + free private listings), **trus
 | 7 | **Baltic + EV + PWA** | Scale & polish | EE→LV/LT, ET/EN/RU/LV/LT i18n, import calculator, EV fields, PWA/a11y/perf |
 
 ### Phase 1a task seeds
-- [ ] CI pipeline (ruff + mypy + pytest) on push/PR
-- [ ] Real `Vehicle`/`Listing`/`SellerProfile`/`Photo`/`VehicleHistoryEvent` models + first Alembic migration (replace dev `create_all`)
-- [ ] Faceted search endpoint (Postgres FTS) + listing detail
-- [ ] `VehicleDataPort`: stub + commercial adapter; plate/VIN auto-fill + history timeline (rollback flag)
-- [ ] Accounts + auth (OAuth2/OIDC; `EidPort` interface stubbed); **start RIA/TARA application**
-- [ ] Photo upload via `MediaPort` (MinIO) + processing worker (arq)
-- [ ] Buyer↔seller messaging
+- [x] CI pipeline (ruff + mypy + pytest) on push/PR
+- [x] Real `Vehicle`/`Listing`/`SellerProfile`/`Photo`/`VehicleHistoryEvent` models + first Alembic migration
+- [x] Faceted search endpoint (ILIKE; Postgres FTS in Phase 4) + listing detail
+- [x] `VehicleDataPort`: stub + commercial adapter skeleton; plate/VIN auto-fill + history timeline (rollback flag)
+- [x] Accounts + auth (JWT bearer; `EidPort` interface stubbed) — **TODO: start RIA/TARA application**
+- [x] Photo upload via `MediaPort` (Stub/S3) + processing worker (arq), graceful Redis-down
+- [x] Buyer↔seller messaging
 - [x] Frontend: browse/search/detail/create flows (scaffolded)
 - [ ] Reconcile frontend types/pages to backend's **nested-vehicle** response shape (`vehicle.make`, `price_eur_cents`, `location_county`) — verify end-to-end with `npm install` + live API
+- [ ] Wire auth (`CurrentUser`) into photos/messaging (currently accept explicit user ids); generate the migration for any model deltas; run mypy clean
+- [ ] Replace local `create_all` with `alembic upgrade head` in the dev path
 
 ### Phase 1b task seeds
 - [ ] Dealer accounts + `FeedPort` + one dealer feed format ingested by a worker
