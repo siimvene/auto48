@@ -7,6 +7,7 @@
 
 | | |
 |---|---|
+| **Domain** | `kekec.ee` |
 | **Host (IP)** | `178.105.234.239` |
 | **Hostname** | `ubuntu-4gb-nbg1-2` |
 | **Provider** | Hetzner Cloud — 4 GB instance, Nuremberg (nbg1) |
