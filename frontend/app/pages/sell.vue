@@ -1,6 +1,23 @@
 <script setup lang="ts">
 import type { ListingCreate, VehicleLookup, FuelType, BodyType, TransmissionType, DrivetrainType } from '~/types/listing'
 
+// Photo upload response shape
+interface PhotoUploadResponse {
+  id: number
+  listing_id: number
+  url: string
+  position: number
+  processed: boolean
+  created_at: string
+}
+
+// Photo preview item
+interface PhotoItem {
+  id: string
+  file: File
+  url: string
+}
+
 useSeoMeta({
   title: 'Lisa kuulutus — auto48',
   description: 'Lisa oma auto kuulutus 60 sekundiga. Täida mark, mudel ja andmed numbrimärgi järgi automaatselt. Eraisikule tasuta.',
@@ -185,7 +202,38 @@ async function submitListing() {
       headers: authHeaders(),
       body: payload,
     })
-    await router.push(`/listings/${created.id}`)
+
+    // Upload photos sequentially if any are selected
+    const photos = selectedPhotos.value
+    if (photos.length > 0) {
+      uploadDone.value = 0
+      uploadTotal.value = photos.length
+      let failedCount = 0
+
+      for (const item of photos) {
+        try {
+          const formData = new FormData()
+          formData.append('file', item.file)
+          await $fetch<PhotoUploadResponse>(`/v1/listings/${created.id}/photos`, {
+            baseURL: config.public.apiBase,
+            method: 'POST',
+            headers: authHeaders(),
+            body: formData,
+          })
+        } catch {
+          failedCount++
+        }
+        uploadDone.value++
+      }
+
+      if (failedCount > 0) {
+        await router.push(`/listings/${created.id}?photos_failed=${failedCount}`)
+      } else {
+        await router.push(`/listings/${created.id}`)
+      }
+    } else {
+      await router.push(`/listings/${created.id}`)
+    }
   } catch (err: unknown) {
     const status = (err as { statusCode?: number })?.statusCode
     if (status === 422) {
@@ -197,6 +245,8 @@ async function submitListing() {
     }
   } finally {
     submitPending.value = false
+    uploadDone.value = 0
+    uploadTotal.value = 0
   }
 }
 
@@ -242,6 +292,111 @@ const drivetrainOptions = [
 
 const currentYear = new Date().getFullYear()
 const yearOptions = Array.from({ length: 35 }, (_, i) => currentYear - i)
+
+// ---------------------------------------------------------------------------
+// Photo picker
+// ---------------------------------------------------------------------------
+const MAX_PHOTOS = 12
+const MAX_FILE_SIZE = 10 * 1024 * 1024 // 10 MB
+
+const selectedPhotos = ref<PhotoItem[]>([])
+const isDragging = ref(false)
+const photoError = ref<string | null>(null)
+const fileInputRef = ref<HTMLInputElement | null>(null)
+
+// Upload progress
+const uploadDone = ref(0)
+const uploadTotal = ref(0)
+
+let _photoIdCounter = 0
+function makePhotoId() {
+  return `photo-${++_photoIdCounter}`
+}
+
+function addFiles(files: FileList | File[]) {
+  photoError.value = null
+  const arr = Array.from(files)
+  const remaining = MAX_PHOTOS - selectedPhotos.value.length
+
+  if (remaining <= 0) {
+    photoError.value = `Maksimaalne fotode arv (${MAX_PHOTOS}) on täidetud.`
+    return
+  }
+
+  const toAdd = arr.slice(0, remaining)
+  if (arr.length > remaining) {
+    photoError.value = `Korraga saab lisada kuni ${MAX_PHOTOS} fotot. Jäeti ${arr.length - remaining} faili vahele.`
+  }
+
+  const invalid: string[] = []
+  for (const file of toAdd) {
+    if (!file.type.startsWith('image/')) {
+      invalid.push(`${file.name} ei ole pilt`)
+      continue
+    }
+    if (file.size > MAX_FILE_SIZE) {
+      invalid.push(`${file.name} on liiga suur (maks 10 MB)`)
+      continue
+    }
+    selectedPhotos.value.push({
+      id: makePhotoId(),
+      file,
+      url: URL.createObjectURL(file),
+    })
+  }
+
+  if (invalid.length) {
+    photoError.value = invalid.join('; ')
+  }
+}
+
+function removePhoto(index: number) {
+  const item = selectedPhotos.value[index]
+  if (item) {
+    URL.revokeObjectURL(item.url)
+    selectedPhotos.value.splice(index, 1)
+  }
+}
+
+function onFileInputChange(e: Event) {
+  const input = e.target as HTMLInputElement
+  if (input.files && input.files.length) {
+    addFiles(input.files)
+  }
+  // Reset so re-selecting same file fires change again
+  input.value = ''
+}
+
+function onDragEnter(e: DragEvent) {
+  e.preventDefault()
+  isDragging.value = true
+}
+function onDragOver(e: DragEvent) {
+  e.preventDefault()
+  isDragging.value = true
+}
+function onDragLeave(e: DragEvent) {
+  e.preventDefault()
+  isDragging.value = false
+}
+function onDrop(e: DragEvent) {
+  e.preventDefault()
+  isDragging.value = false
+  if (e.dataTransfer?.files) {
+    addFiles(e.dataTransfer.files)
+  }
+}
+
+function openFilePicker() {
+  fileInputRef.value?.click()
+}
+
+// Revoke all object URLs on unmount
+onBeforeUnmount(() => {
+  for (const item of selectedPhotos.value) {
+    URL.revokeObjectURL(item.url)
+  }
+})
 </script>
 
 <template>
@@ -527,6 +682,71 @@ const yearOptions = Array.from({ length: 35 }, (_, i) => currentYear - i)
           </div>
         </section>
 
+        <!-- Photo upload -->
+        <section class="form-section">
+          <h2 class="form-section__title">Pildid</h2>
+
+          <!-- Dropzone -->
+          <div
+            class="photo-dropzone"
+            :class="{ 'photo-dropzone--dragging': isDragging }"
+            role="button"
+            tabindex="0"
+            aria-label="Lisa fotod"
+            @click="openFilePicker"
+            @keydown.enter.prevent="openFilePicker"
+            @keydown.space.prevent="openFilePicker"
+            @dragenter="onDragEnter"
+            @dragover="onDragOver"
+            @dragleave="onDragLeave"
+            @drop="onDrop"
+          >
+            <input
+              ref="fileInputRef"
+              type="file"
+              accept="image/*"
+              multiple
+              class="photo-dropzone__input"
+              tabindex="-1"
+              aria-hidden="true"
+              @change="onFileInputChange"
+            />
+            <div class="photo-dropzone__icon" aria-hidden="true">
+              <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="3"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
+            </div>
+            <p class="photo-dropzone__label">Lohista pildid siia või <span class="photo-dropzone__link">vali failid</span></p>
+            <p class="photo-dropzone__hint">Kuni {{ MAX_PHOTOS }} fotot · maks 10 MB faili kohta · esimene foto on kaanepilt</p>
+          </div>
+
+          <!-- Validation error -->
+          <p v-if="photoError" class="photo-error" role="alert">{{ photoError }}</p>
+
+          <!-- Previews -->
+          <div v-if="selectedPhotos.length > 0" class="photo-previews">
+            <div class="photo-preview-count">
+              {{ selectedPhotos.length }} / {{ MAX_PHOTOS }} fotot valitud
+            </div>
+            <div class="photo-preview-grid">
+              <div
+                v-for="(item, i) in selectedPhotos"
+                :key="item.id"
+                class="photo-thumb"
+              >
+                <img :src="item.url" :alt="`Foto ${i + 1}`" class="photo-thumb__img" />
+                <span v-if="i === 0" class="photo-thumb__cover">Kaas</span>
+                <button
+                  type="button"
+                  class="photo-thumb__remove"
+                  :aria-label="`Eemalda foto ${i + 1}`"
+                  @click.stop="removePhoto(i)"
+                >
+                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+                </button>
+              </div>
+            </div>
+          </div>
+        </section>
+
         <!-- Submit -->
         <div class="form-footer">
           <p v-if="submitError" class="submit-error" role="alert">{{ submitError }}</p>
@@ -536,7 +756,9 @@ const yearOptions = Array.from({ length: 35 }, (_, i) => currentYear - i)
             :disabled="submitPending"
           >
             <span v-if="submitPending" class="spinner" aria-hidden="true" />
-            {{ submitPending ? 'Avaldan…' : 'Avalda kuulutus' }}
+            <span v-if="submitPending && uploadTotal > 0">Laen pilte üles… {{ uploadDone }}/{{ uploadTotal }}</span>
+            <span v-else-if="submitPending">Avaldan…</span>
+            <span v-else>Avalda kuulutus</span>
           </button>
           <p class="form-footer__note">Eraisikule tasuta. Ei mingeid varjatud tasusid.</p>
         </div>
@@ -690,5 +912,141 @@ const yearOptions = Array.from({ length: 35 }, (_, i) => currentYear - i)
 .spinner {
   display: inline-block; width: 1em; height: 1em; border: 2px solid currentColor;
   border-top-color: transparent; border-radius: 50%; animation: spin .7s linear infinite; flex-shrink: 0;
+}
+
+/* ---- Photo picker ---- */
+.photo-dropzone {
+  position: relative;
+  border: 2px dashed var(--line-l);
+  border-radius: 12px;
+  background: var(--page);
+  padding: 32px 20px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  cursor: pointer;
+  transition: border-color .2s, background .2s;
+  text-align: center;
+  outline: none;
+}
+.photo-dropzone:hover,
+.photo-dropzone:focus-visible {
+  border-color: var(--volt-2);
+  background: rgba(194, 238, 69, .04);
+}
+.photo-dropzone--dragging {
+  border-color: var(--volt);
+  background: rgba(194, 238, 69, .08);
+  box-shadow: 0 0 0 4px rgba(194, 238, 69, .14);
+}
+.photo-dropzone__input {
+  position: absolute;
+  width: 1px; height: 1px;
+  opacity: 0; pointer-events: none;
+}
+.photo-dropzone__icon {
+  color: var(--faint-l);
+  margin-bottom: 4px;
+  transition: color .2s;
+}
+.photo-dropzone:hover .photo-dropzone__icon,
+.photo-dropzone--dragging .photo-dropzone__icon {
+  color: var(--volt-2);
+}
+.photo-dropzone__label {
+  font-size: 14.5px;
+  font-weight: 600;
+  color: var(--ink);
+  margin: 0;
+}
+.photo-dropzone__link {
+  color: var(--volt-2);
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+.photo-dropzone__hint {
+  font-size: 12.5px;
+  color: var(--faint-l);
+  margin: 0;
+}
+
+.photo-error {
+  font-size: 12.5px;
+  color: var(--neg);
+  margin: 8px 0 0;
+  padding: 10px 14px;
+  background: rgba(192, 73, 43, .07);
+  border: 1px solid rgba(192, 73, 43, .25);
+  border-radius: 8px;
+}
+
+.photo-previews {
+  margin-top: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.photo-preview-count {
+  font-family: var(--mono);
+  font-size: 12px;
+  color: var(--faint-l);
+}
+.photo-preview-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 10px;
+}
+@media (max-width: 560px) {
+  .photo-preview-grid { grid-template-columns: repeat(3, 1fr); }
+}
+
+.photo-thumb {
+  position: relative;
+  aspect-ratio: 4/3;
+  border-radius: 10px;
+  overflow: hidden;
+  background: var(--page);
+  border: 1px solid var(--line-l);
+}
+.photo-thumb__img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+.photo-thumb__cover {
+  position: absolute;
+  bottom: 6px;
+  left: 6px;
+  font-family: var(--mono);
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: .04em;
+  text-transform: uppercase;
+  background: var(--volt);
+  color: var(--volt-ink);
+  border-radius: 5px;
+  padding: 2px 6px;
+}
+.photo-thumb__remove {
+  position: absolute;
+  top: 5px;
+  right: 5px;
+  width: 24px;
+  height: 24px;
+  border-radius: 6px;
+  background: rgba(16, 19, 16, .65);
+  border: none;
+  color: #fff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: background .15s;
+  backdrop-filter: blur(2px);
+}
+.photo-thumb__remove:hover {
+  background: var(--neg);
 }
 </style>

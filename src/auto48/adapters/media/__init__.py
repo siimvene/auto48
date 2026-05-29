@@ -19,6 +19,7 @@ def get_media_adapter(settings: Settings) -> MediaPort:
             access_key=settings.s3_access_key,
             secret_key=settings.s3_secret_key,
             bucket=settings.s3_bucket,
+            public_base_url=settings.s3_public_base_url or None,
         )
 
     from auto48.adapters.media.stub import StubMediaAdapter

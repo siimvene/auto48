@@ -58,6 +58,10 @@ class Settings(BaseSettings):
     s3_access_key: str = ""
     s3_secret_key: str = ""
     s3_bucket: str = "auto48-media"
+    # Public base URL browsers use to fetch objects (the internal endpoint is
+    # not reachable from the client). On prod, nginx proxies /media/ → MinIO, so
+    # this is e.g. https://kekec.ee/media/auto48-media. Empty → derive from endpoint.
+    s3_public_base_url: str = ""
 
     # Redis URL used by arq workers and job enqueueing.
     redis_url: str = "redis://localhost:6379/0"
