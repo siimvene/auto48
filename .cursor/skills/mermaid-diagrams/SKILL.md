@@ -13,7 +13,7 @@ description: Standards and best practices for creating Mermaid diagrams. Use whe
 
 ```mermaid
 ---
-title: PostgreSQL HA Architecture in SMIT
+title: PostgreSQL HA Architecture
 ---
 graph TB
     subgraph Apps["🏗️ Rakendused"]
@@ -82,7 +82,7 @@ Use **consistent colors** for similar component types:
 - **Follow UML stereotypes** using `«stereotype»` notation
 
 ```mermaid
-PostgreSQL1["🗄️ «database server»<br/>PostgreSQL 15<br/>pg-mskXX-k8s-1.smit.dev<br/>Port 5432"]
+PostgreSQL1["🗄️ «database server»<br/>PostgreSQL 15<br/>pg-mskXX-k8s-1.example.internal<br/>Port 5432"]
 ```
 
 ## Subgraph Organization
@@ -96,7 +96,7 @@ PostgreSQL1["🗄️ «database server»<br/>PostgreSQL 15<br/>pg-mskXX-k8s-1.sm
 ```mermaid
 subgraph DC1["🏢 «data center»<br/>DC1 - Data Center 1"]
     direction TB
-    subgraph VM1["🖥️ «virtual machine»<br/>OEL 8 Virtual Machine<br/>pg-mskXX-k8s-1.smit.dev"]
+    subgraph VM1["🖥️ «virtual machine»<br/>OEL 8 Virtual Machine<br/>pg-mskXX-k8s-1.example.internal"]
         direction TB
         VM1_Spacer1[" "]
         PostgreSQL1["🗄️ «database server»<br/>PostgreSQL 15"]

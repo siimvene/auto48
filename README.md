@@ -5,7 +5,7 @@ An open car marketplace for the Estonian/Baltic market — a competitor to
 
 - **Backend:** FastAPI · Python 3.12+ · async SQLAlchemy 2.0 · Alembic
 - **Frontend:** Nuxt 4 · Vue 3 (Composition API)
-- **Standards:** SMIT development standards under [`.cursor/rules/`](.cursor/rules), distilled for
+- **Standards:** shared development standards under [`.cursor/rules/`](.cursor/rules), distilled for
   AI agents in [`CLAUDE.md`](CLAUDE.md). Project memory via [memspec](.memspec).
 
 ## Quick start

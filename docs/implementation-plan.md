@@ -12,7 +12,7 @@ competitor. FastAPI backend, Nuxt 4 / Vue 3 frontend.
 
 **Phase 0 — Scaffold (in progress)**
 
-- [x] Repository seeded with SMIT development standards (`.cursor/rules`, skills, hooks)
+- [x] Repository seeded with shared development standards (`.cursor/rules`, skills, hooks)
 - [x] memspec memory store initialised
 - [x] FastAPI backend skeleton: settings, async DB, health, example `listings` resource
 - [x] Alembic async migration environment

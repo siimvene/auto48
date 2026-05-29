@@ -8,7 +8,7 @@ alwaysApply: true
 ## Context and Purpose
 
 **Target Audience**: Software developers, AI coding assistants, automated code review tools
-**Scope**: Enterprise software component development for SMIT platform
+**Scope**: Enterprise software component development
 **Purpose**: Automatically enforceable technical standards and implementation patterns
 
 These standards are designed to be validated automatically during development by AI assistants and code analysis tools. They focus on component architecture patterns, integration approaches, technical implementation details, and best practices that can be mechanically verified.

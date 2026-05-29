@@ -1,6 +1,6 @@
 """Example car-listings resource: contract-first, paginated, async SQLAlchemy.
 
-Demonstrates the SMIT conventions: thin handlers, Annotated DI, early returns,
+Demonstrates the project conventions: thin handlers, Annotated DI, early returns,
 limit/offset pagination with a separate count query, and RFC 7807 errors.
 """
 

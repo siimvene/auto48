@@ -3,7 +3,7 @@
 Open car marketplace for the Estonian/Baltic market — an **auto24.ee competitor**.
 **Stack:** FastAPI (Python 3.12+, async SQLAlchemy 2.0) backend + Nuxt 4 / Vue 3 frontend.
 
-> Full, authoritative standards live in `.cursor/rules/**` (SMIT development standards).
+> Full, authoritative standards live in `.cursor/rules/**` (shared development standards).
 > This file is the distilled, always-on summary for AI agents. When in doubt, read the
 > matching `.mdc` rule. Do not contradict the rules.
 
