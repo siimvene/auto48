@@ -9,6 +9,8 @@ watch(() => props.query, v => (q.value = v))
 function submit() {
   router.push({ path: '/search', query: q.value.trim() ? { q: q.value.trim() } : {} })
 }
+
+const { isLoggedIn, user, logout } = useAuth()
 </script>
 
 <template>
@@ -31,6 +33,12 @@ function submit() {
     <div class="lnav-right">
       <button type="button" class="lng"><Icon name="globe" :size="15" />ET</button>
       <NuxtLink to="/search" class="ghost"><Icon name="heart" :size="16" /><span>Salvestatud</span></NuxtLink>
+      <!-- Auth state -->
+      <template v-if="isLoggedIn">
+        <span class="lnav-user">{{ user?.display_name || user?.email }}</span>
+        <button type="button" class="lnav-logout" @click="logout">Logi välja</button>
+      </template>
+      <NuxtLink v-else to="/login" class="lnav-login">Logi sisse</NuxtLink>
       <NuxtLink to="/sell" class="btn-volt"><Icon name="plus" :size="15" />Lisa kuulutus</NuxtLink>
     </div>
   </nav>

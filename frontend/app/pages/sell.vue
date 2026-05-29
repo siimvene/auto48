@@ -7,6 +7,7 @@ useSeoMeta({
 })
 
 const config = useRuntimeConfig()
+const { isLoggedIn, authHeaders } = useAuth()
 
 // ---------------------------------------------------------------------------
 // Plate lookup
@@ -64,7 +65,6 @@ async function lookupVehicle() {
 // Form state
 // ---------------------------------------------------------------------------
 interface FormState {
-  seller_id: string
   title: string
   make: string
   model: string
@@ -82,7 +82,6 @@ interface FormState {
 }
 
 const form = reactive<FormState>({
-  seller_id: '',
   title: '',
   make: '',
   model: '',
@@ -110,7 +109,6 @@ watch([() => form.make, () => form.model, () => form.year], ([make, model, year]
 // Validation
 // ---------------------------------------------------------------------------
 interface ValidationErrors {
-  seller_id?: string
   title?: string
   make?: string
   model?: string
@@ -129,8 +127,6 @@ const submitPending = ref(false)
 function validate(): boolean {
   const e: ValidationErrors = {}
 
-  if (!form.seller_id || isNaN(Number(form.seller_id)) || Number(form.seller_id) < 1)
-                                  e.seller_id    = 'Müüja ID on kohustuslik'
   if (!form.title.trim())         e.title        = 'Pealkiri on kohustuslik'
   if (!form.make.trim())          e.make         = 'Mark on kohustuslik'
   if (!form.model.trim())         e.model        = 'Mudel on kohustuslik'
@@ -162,9 +158,7 @@ async function submitListing() {
   submitPending.value = true
   submitError.value = null
 
-  const payload: ListingCreate = {
-    // TODO: derive from auth session once auth is wired into the frontend
-    seller_id: Number(form.seller_id),
+  const payload: Omit<ListingCreate, 'seller_id'> = {
     vehicle: {
       make:         form.make.trim(),
       model:        form.model.trim(),
@@ -188,6 +182,7 @@ async function submitListing() {
     const created = await $fetch<{ id: number }>('/v1/listings', {
       baseURL: config.public.apiBase,
       method: 'POST',
+      headers: authHeaders(),
       body: payload,
     })
     await router.push(`/listings/${created.id}`)
@@ -196,7 +191,7 @@ async function submitListing() {
     if (status === 422) {
       submitError.value = 'Mõned väljad on vigased. Palun kontrolli sisestust.'
     } else if (status === 401 || status === 403) {
-      submitError.value = 'Kuulutuse lisamiseks pead olema sisse logitud.'
+      await router.push('/login?redirect=/sell')
     } else {
       submitError.value = 'Kuulutuse loomine ebaõnnestus. Palun proovi hiljem uuesti.'
     }
@@ -259,8 +254,20 @@ const yearOptions = Array.from({ length: 35 }, (_, i) => currentYear - i)
         <p class="sell-header__sub">Eraisikule tasuta. Täida andmed numbrimärgi järgi automaatselt ja avalda minutitega.</p>
       </header>
 
+      <!-- Auth gate: show CTA when not logged in instead of the form -->
+      <div v-if="!isLoggedIn" class="auth-gate">
+        <div class="auth-gate__icon" aria-hidden="true"><Icon name="lock" :size="28" /></div>
+        <h2 class="auth-gate__title">Logi sisse, et kuulutus lisada</h2>
+        <p class="auth-gate__text">Kuulutuse loomiseks peab olema sisse logitud. Eraisikule tasuta.</p>
+        <NuxtLink to="/login?redirect=/sell" class="btn-volt auth-gate__cta">
+          <Icon name="log-in" :size="16" />
+          Logi sisse
+        </NuxtLink>
+        <p class="auth-gate__reg">Pole kontot? <NuxtLink to="/register?redirect=/sell">Registreeru</NuxtLink></p>
+      </div>
+
       <!-- Plate lookup -->
-      <section class="lookup-section" aria-label="Auto-fill from plate">
+      <section v-if="isLoggedIn" class="lookup-section" aria-label="Auto-fill from plate">
         <div class="lookup-card">
           <div class="lookup-card__icon" aria-hidden="true"><Icon name="search" :size="22" /></div>
           <div class="lookup-card__body">
@@ -295,30 +302,7 @@ const yearOptions = Array.from({ length: 35 }, (_, i) => currentYear - i)
       </section>
 
       <!-- Listing form -->
-      <form class="listing-form" novalidate @submit.prevent="submitListing">
-
-        <!-- Seller info -->
-        <section class="form-section">
-          <h2 class="form-section__title">Müüja andmed</h2>
-          <div class="form-grid">
-            <div class="field">
-              <label class="field__label" for="seller_id">Müüja ID <span class="required" aria-hidden="true">*</span></label>
-              <!-- TODO: derive from auth session once auth is wired into the frontend -->
-              <input
-                id="seller_id"
-                v-model="form.seller_id"
-                class="field__input"
-                :class="{ 'field__input--error': errors.seller_id }"
-                type="number"
-                min="1"
-                placeholder="Sinu kasutaja ID"
-                required
-                @input="clearError('seller_id')"
-              />
-              <p v-if="errors.seller_id" class="field__error" role="alert">{{ errors.seller_id }}</p>
-            </div>
-          </div>
-        </section>
+      <form v-if="isLoggedIn" class="listing-form" novalidate @submit.prevent="submitListing">
 
         <!-- Basic info -->
         <section class="form-section">
@@ -571,6 +555,34 @@ const yearOptions = Array.from({ length: 35 }, (_, i) => currentYear - i)
   flex-direction: column;
   gap: 28px;
 }
+
+/* ---- Auth gate ---- */
+.auth-gate {
+  background: var(--surface);
+  border: 1px solid var(--line-l);
+  border-radius: 18px;
+  padding: 48px 32px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  gap: 12px;
+}
+.auth-gate__icon {
+  width: 56px; height: 56px; border-radius: 14px;
+  background: var(--page); color: var(--faint-l);
+  display: flex; align-items: center; justify-content: center;
+  margin-bottom: 4px;
+}
+.auth-gate__title {
+  font-family: var(--space); font-size: 22px; font-weight: 700;
+  letter-spacing: -.02em; color: var(--ink); margin: 0;
+}
+.auth-gate__text { font-size: 15px; color: var(--muted-l); margin: 0; max-width: 340px; }
+.auth-gate__cta { margin-top: 8px; }
+.auth-gate__reg { font-size: 14px; color: var(--muted-l); margin: 0; }
+.auth-gate__reg a { color: var(--ink); font-weight: 600; text-decoration: none; }
+.auth-gate__reg a:hover { text-decoration: underline; }
 
 /* ---- Header ---- */
 .sell-header__title {

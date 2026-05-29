@@ -11,10 +11,10 @@ from fastapi import APIRouter, HTTPException, Query, status
 from sqlalchemy import select
 from sqlalchemy.orm import selectinload
 
-from auto48.api.dependencies import DbSession
+from auto48.api.dependencies import CurrentUser, DbSession
 from auto48.models.listing import Listing, ListingStatus
 from auto48.models.schemas import ListingCreate, ListingResponse, Page
-from auto48.models.seller import SellerProfile
+from auto48.models.seller import SellerProfile, SellerType
 from auto48.models.vehicle import BodyType, FuelType, Transmission, Vehicle
 from auto48.services.search import build_count_query, build_filters, build_listing_query
 
@@ -128,21 +128,31 @@ async def get_listing(listing_id: int, db: DbSession) -> ListingResponse:
     return _to_response(record)
 
 
-@router.post("", response_model=ListingResponse, status_code=status.HTTP_201_CREATED)
-async def create_listing(payload: ListingCreate, db: DbSession) -> ListingResponse:
-    seller = await db.get(SellerProfile, payload.seller_id)
+async def _seller_profile_for(db: DbSession, user_id: int) -> SellerProfile:
+    """Return the user's seller profile, creating a PRIVATE one on first listing."""
+    seller = await db.scalar(select(SellerProfile).where(SellerProfile.user_id == user_id))
     if seller is None:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail=f"Seller {payload.seller_id} not found",
-        )
+        seller = SellerProfile(user_id=user_id, type=SellerType.PRIVATE)
+        db.add(seller)
+        await db.flush()
+    return seller
+
+
+@router.post("", response_model=ListingResponse, status_code=status.HTTP_201_CREATED)
+async def create_listing(
+    payload: ListingCreate,
+    db: DbSession,
+    current_user: CurrentUser,
+) -> ListingResponse:
+    # Seller is derived from the authenticated user — never trusted from the client.
+    seller = await _seller_profile_for(db, current_user.id)
 
     vehicle = Vehicle(**payload.vehicle.model_dump())
     db.add(vehicle)
     await db.flush()
 
     listing = Listing(
-        seller_id=payload.seller_id,
+        seller_id=seller.id,
         vehicle_id=vehicle.id,
         title=payload.title,
         description=payload.description,

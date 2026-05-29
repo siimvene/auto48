@@ -51,7 +51,7 @@ class VehicleResponse(BaseModel):
 
 
 class ListingCreate(BaseModel):
-    seller_id: int
+    # seller is derived from the authenticated user, not supplied by the client
     vehicle: VehicleCreate
     title: str = Field(min_length=1, max_length=255)
     description: str | None = None
