@@ -37,3 +37,29 @@ class StubPaymentAdapter:
     async def cancel_subscription(self, sub_ref: str) -> None:
         # No-op for the stub.
         return
+
+    async def hold_deposit(
+        self,
+        *,
+        amount_eur_cents: int,
+        reference: str,
+    ) -> PaymentResult:
+        return PaymentResult(
+            provider_id=f"stub_hold_{reference}_{amount_eur_cents}",
+            status="held",
+            client_secret=None,
+        )
+
+    async def release_deposit(self, provider_id: str) -> PaymentResult:
+        return PaymentResult(
+            provider_id=provider_id,
+            status="released",
+            client_secret=None,
+        )
+
+    async def refund_deposit(self, provider_id: str) -> PaymentResult:
+        return PaymentResult(
+            provider_id=provider_id,
+            status="refunded",
+            client_secret=None,
+        )

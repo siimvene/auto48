@@ -69,3 +69,43 @@ class StripePaymentAdapter:
     async def cancel_subscription(self, sub_ref: str) -> None:
         """Cancel an active Stripe subscription."""
         self._client.subscriptions.cancel(sub_ref)
+
+    async def hold_deposit(
+        self,
+        *,
+        amount_eur_cents: int,
+        reference: str,
+    ) -> PaymentResult:
+        """Create a Stripe PaymentIntent with manual capture (escrow hold)."""
+        intent = self._client.payment_intents.create(
+            params={
+                "amount": amount_eur_cents,
+                "currency": "eur",
+                "capture_method": "manual",
+                "metadata": {"reference": reference},
+                "automatic_payment_methods": {"enabled": True},
+            }
+        )
+        return PaymentResult(
+            provider_id=intent.id,
+            status=intent.status,
+            client_secret=intent.client_secret,
+        )
+
+    async def release_deposit(self, provider_id: str) -> PaymentResult:
+        """Capture a previously held PaymentIntent, transferring funds to the seller."""
+        intent = self._client.payment_intents.capture(provider_id)
+        return PaymentResult(
+            provider_id=intent.id,
+            status=intent.status,
+            client_secret=None,
+        )
+
+    async def refund_deposit(self, provider_id: str) -> PaymentResult:
+        """Cancel/refund a held PaymentIntent back to the buyer."""
+        intent = self._client.payment_intents.cancel(provider_id)
+        return PaymentResult(
+            provider_id=intent.id,
+            status=intent.status,
+            client_secret=None,
+        )

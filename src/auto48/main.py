@@ -12,8 +12,11 @@ from auto48.api.routers import (
     auth,
     billing,
     conversations,
+    dealer_analytics,
+    escrow,
     feeds,
     health,
+    import_calculator,
     listings,
     photos,
     recommendations,
@@ -82,6 +85,9 @@ def create_app() -> FastAPI:
     app.include_router(tco.router)
     app.include_router(test_drives.router)
     app.include_router(recommendations.router)
+    app.include_router(escrow.router)
+    app.include_router(import_calculator.router)
+    app.include_router(dealer_analytics.router)
     return app
 
 

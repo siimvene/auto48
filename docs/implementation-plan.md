@@ -74,8 +74,14 @@ Backend slices implemented against the spec pillars (no external deps; auth-gate
   request/confirm/decline/cancel under `/v1/listings/{id}/test-drives` and `/v1/test-drives/*`.
 - **Recommendations / similar** (Phase 4 discovery): `GET /v1/listings/{id}/similar`,
   `GET /v1/recommendations`. `services/recommendations.py`.
+- **Escrow / deposit** (Phase 5 transactions): `Deposit` model + `PaymentPort` hold/release/refund
+  → `POST /v1/listings/{id}/deposit`, `/v1/deposits/{id}/release|refund`.
+- **Import-cost calculator** (Phase 7): EE landed-cost (customs/VAT/2025 car tax/transport) →
+  `GET|POST /v1/import-calculator`.
+- **Dealer analytics** (Phase 6): inventory/leads/test-drives/feed-health aggregates →
+  `GET /v1/dealer/analytics`.
 
-38 API routes, 173 tests, mypy `--strict` clean. Still open in these phases: eID go-live (external),
+45 API routes, 216 tests, mypy `--strict` clean, 4 migrations. Still open in these phases: eID go-live (external),
 Typesense/real-time alerts/map+NL search, escrow + e-signed contract (eID-gated), dealer CRM/analytics,
 i18n/EV-fields/PWA, and the matching frontend surfaces.
 

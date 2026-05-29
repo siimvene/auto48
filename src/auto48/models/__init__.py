@@ -18,6 +18,7 @@ from auto48.models.dealer_feed import (
     IngestRun,
     IngestStatus,
 )
+from auto48.models.escrow import Deposit, DepositStatus
 from auto48.models.history import (
     HistoryEventType,
     VehicleHistoryEvent,
@@ -42,6 +43,8 @@ __all__ = [
     "BodyType",
     "Conversation",
     "DealerFeed",
+    "Deposit",
+    "DepositStatus",
     "Drivetrain",
     "FeedFormat",
     "FuelType",

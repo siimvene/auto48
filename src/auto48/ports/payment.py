@@ -65,3 +65,42 @@ class PaymentPort(Protocol):
             sub_ref: Provider subscription id (e.g. Stripe subscription id).
         """
         ...
+
+    async def hold_deposit(
+        self,
+        *,
+        amount_eur_cents: int,
+        reference: str,
+    ) -> PaymentResult:
+        """Place a hold (escrow) on funds from the buyer.
+
+        Args:
+            amount_eur_cents: Amount to hold in EUR cents.
+            reference: Domain-level reference (e.g. ``"deposit:{deposit_id}"``).
+
+        Returns:
+            PaymentResult with provider_id set to the hold/payment-intent id.
+        """
+        ...
+
+    async def release_deposit(self, provider_id: str) -> PaymentResult:
+        """Release a held deposit to the seller (capture/transfer).
+
+        Args:
+            provider_id: The provider-side hold id returned by :meth:`hold_deposit`.
+
+        Returns:
+            PaymentResult reflecting the released state.
+        """
+        ...
+
+    async def refund_deposit(self, provider_id: str) -> PaymentResult:
+        """Refund a held deposit back to the buyer.
+
+        Args:
+            provider_id: The provider-side hold id returned by :meth:`hold_deposit`.
+
+        Returns:
+            PaymentResult reflecting the refunded state.
+        """
+        ...
