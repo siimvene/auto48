@@ -21,6 +21,11 @@ class VehicleCreate(BaseModel):
     transmission: Transmission
     drivetrain: Drivetrain | None = None
     specs: dict[str, Any] | None = None
+    # EV-specific fields (optional; only relevant for electric / plugin_hybrid).
+    battery_kwh: float | None = None
+    range_km: int | None = None
+    charge_power_kw: float | None = None
+    charge_port: str | None = Field(default=None, max_length=32)
 
 
 class VehicleResponse(BaseModel):
@@ -38,6 +43,11 @@ class VehicleResponse(BaseModel):
     transmission: Transmission
     drivetrain: Drivetrain | None = None
     specs: dict[str, Any] | None = None
+    # EV-specific fields (optional; only relevant for electric / plugin_hybrid).
+    battery_kwh: float | None = None
+    range_km: int | None = None
+    charge_power_kw: float | None = None
+    charge_port: str | None = None
 
 
 class ListingCreate(BaseModel):

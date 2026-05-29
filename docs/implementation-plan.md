@@ -83,8 +83,10 @@ Backend slices implemented against the spec pillars (no external deps; auth-gate
 - **Map / radius search** (Phase 4): haversine `GET /v1/listings/nearby?lat=&lon=&radius_km=`.
 - **Natural-language search** (Phase 4): rule-based ET/EN parser → `GET /v1/search?q=...`.
 - **Stolen-vehicle check** (Phase 2 trust): `StolenVehiclePort` (+stub) → `GET /v1/vehicles/{vin}/stolen-check`.
+- **EV fields + charging cost** (Phase 7): `Vehicle.battery_kwh/range_km/charge_power_kw/charge_port`
+  + `GET /v1/vehicles/charging-cost`.
 
-48 API routes, 272 tests, mypy `--strict` clean, 4 migrations.
+49 API routes, 291 tests, mypy `--strict` clean, 5 migrations.
 
 Still open — NOT implementable without external access / running infra / frontend work:
 eID go-live + X-tee registry (external/parked), search-engine swap to Typesense/Meilisearch +

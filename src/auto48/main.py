@@ -11,6 +11,7 @@ from auto48 import models as _models  # noqa: F401  (register all ORM metadata)
 from auto48.api.routers import (
     auth,
     billing,
+    charging,
     conversations,
     dealer_analytics,
     escrow,
@@ -94,6 +95,7 @@ def create_app() -> FastAPI:
     app.include_router(geo.router)
     app.include_router(nl_search.router)
     app.include_router(stolen.router)
+    app.include_router(charging.router)
     return app
 
 

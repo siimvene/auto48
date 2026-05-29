@@ -80,6 +80,13 @@ class Vehicle(Base):
     )
     # JSON (not JSONB) for sqlite compatibility; Postgres maps it to JSONB-capable JSON.
     specs: Mapped[dict[str, Any] | None] = mapped_column(JSON, default=None)
+
+    # EV-specific fields (nullable; only meaningful for electric / plugin_hybrid).
+    battery_kwh: Mapped[float | None] = mapped_column(default=None)
+    range_km: Mapped[int | None] = mapped_column(Integer, default=None)
+    charge_power_kw: Mapped[float | None] = mapped_column(default=None)
+    charge_port: Mapped[str | None] = mapped_column(String(32), default=None)
+
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), server_default=func.now()
     )
