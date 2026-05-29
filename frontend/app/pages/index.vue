@@ -309,31 +309,25 @@ const yearOptions = Array.from({ length: 35 }, (_, i) => currentYear - i)
           :key="listing.id"
           :to="`/listings/${listing.id}`"
           class="listing-card"
-          :aria-label="`${listing.title}, ${formatEur(listing.price_eur)}`"
+          :aria-label="`${listing.title}, ${formatEur(listing.price_eur_cents)}`"
         >
           <div class="listing-card__photo">
-            <img
-              v-if="listing.thumbnail_url"
-              :src="listing.thumbnail_url"
-              :alt="`${listing.make} ${listing.model} ${listing.year}`"
-              loading="lazy"
-              class="listing-card__img"
-            />
-            <div v-else class="listing-card__no-photo" aria-hidden="true">No photo</div>
+            <!-- Photos are not embedded in list response; load on detail page -->
+            <div class="listing-card__no-photo" aria-hidden="true">No photo</div>
             <span v-if="listing.status === 'sold'" class="listing-card__sold-badge">Sold</span>
           </div>
 
           <div class="listing-card__body">
             <h3 class="listing-card__title">{{ listing.title }}</h3>
-            <p class="listing-card__price">{{ formatEur(listing.price_eur) }}</p>
+            <p class="listing-card__price">{{ formatEur(listing.price_eur_cents) }}</p>
             <div class="listing-card__meta">
-              <span>{{ listing.year }}</span>
+              <span>{{ listing.vehicle.year }}</span>
               <span class="meta-dot" aria-hidden="true">·</span>
               <span>{{ formatMileage(listing.mileage_km) }}</span>
               <span class="meta-dot" aria-hidden="true">·</span>
-              <span>{{ listing.fuel }}</span>
+              <span>{{ listing.vehicle.fuel }}</span>
             </div>
-            <p class="listing-card__location">{{ listing.location }}</p>
+            <p class="listing-card__location">{{ listing.location_county }}</p>
           </div>
         </NuxtLink>
       </div>

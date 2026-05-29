@@ -1,4 +1,4 @@
-import type { Listing, ListingCard, ListingsQuery, Page } from '~/types/listing'
+import type { Listing, ListingsQuery, Page, Photo } from '~/types/listing'
 
 /**
  * Fetch a paginated list of listings with optional facet filters.
@@ -24,11 +24,11 @@ export function useListings(query: Ref<ListingsQuery> | ComputedRef<ListingsQuer
     pending,
     error,
     refresh,
-  } = useFetch<Page<ListingCard>>('/v1/listings', {
+  } = useFetch<Page<Listing>>('/v1/listings', {
     baseURL: config.public.apiBase,
     query: params,
     key,
-    default: (): Page<ListingCard> => ({ items: [], total: 0, limit: 25, offset: 0 }),
+    default: (): Page<Listing> => ({ items: [], total: 0, limit: 25, offset: 0 }),
   })
 
   return {
@@ -58,6 +58,34 @@ export function useListing(id: Ref<string | number> | ComputedRef<string | numbe
     baseURL: config.public.apiBase,
     key,
     default: (): null => null,
+  })
+
+  return {
+    data,
+    pending,
+    error,
+    refresh,
+  }
+}
+
+/**
+ * Fetch photos for a listing by id.
+ * Returns Photo[] from GET /v1/listings/{id}/photos.
+ */
+export function useListingPhotos(id: Ref<string | number> | ComputedRef<string | number> | string | number) {
+  const config = useRuntimeConfig()
+
+  const key = computed(() => `listing-photos:${toValue(id)}`)
+
+  const {
+    data,
+    pending,
+    error,
+    refresh,
+  } = useFetch<Photo[]>(() => `/v1/listings/${toValue(id)}/photos`, {
+    baseURL: config.public.apiBase,
+    key,
+    default: (): Photo[] => [],
   })
 
   return {

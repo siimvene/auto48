@@ -23,7 +23,10 @@ Locked decisions: **both-supply** (dealer feeds + free private listings), **trus
 - [x] Nuxt 4 / Vue 3 frontend skeleton
 - [x] Product scope + architecture documented
 
-**Phase 1a — Core marketplace + trust hook (next)** — see scope "MVP cut".
+**Phase 1a — Core marketplace + trust hook (complete)** — backend: 6 routers (health, auth,
+listings/search, vehicles+history, photos, conversations), mypy `--strict` clean, 57 tests passing;
+frontend: browse/detail/sell built against the real contract (`nuxt build` green). External/deferred:
+RIA/TARA eID application; local `create_all`→Alembic. **Next: Phase 1b.**
 
 ## Roadmap (phased)
 
@@ -48,7 +51,7 @@ Locked decisions: **both-supply** (dealer feeds + free private listings), **trus
 - [x] Photo upload via `MediaPort` (Stub/S3) + processing worker (arq), graceful Redis-down
 - [x] Buyer↔seller messaging
 - [x] Frontend: browse/search/detail/create flows (scaffolded)
-- [~] Reconcile frontend types/pages to backend's **nested-vehicle** response shape — in progress (verifying with `npm install` + build)
+- [x] Reconcile frontend types/pages to backend's **nested-vehicle** response shape — verified with `nuxt build` (✨ Build complete); also fixed sell-form enum values (plugin_hybrid/wagon/semi_automatic/cvt)
 - [x] Wire auth (`CurrentUser`) into photos (ownership-checked) and messaging (buyer/sender from token); mypy `--strict` clean; full suite 57 passing
 - [ ] Replace local `create_all` with `alembic upgrade head` — **deferred by decision**: `create_all` is gated to `environment == "local"` (dev/test convenience only); production already uses Alembic. Revisit if local/prod parity is needed.
 

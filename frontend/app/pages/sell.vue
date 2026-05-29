@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import type { CreateListingPayload, VehicleLookup, FuelType, BodyType, TransmissionType } from '~/types/listing'
+import type { ListingCreate, VehicleLookup, FuelType, BodyType, TransmissionType, DrivetrainType } from '~/types/listing'
 
 useSeoMeta({
   title: 'Sell your car — auto48',
@@ -32,7 +32,7 @@ async function lookupVehicle() {
         query: { plate },
       },
     )
-    // Auto-fill form fields from lookup result
+    // Auto-fill form fields from lookup result (VehicleDataResponse → form fields)
     if (result.make)         form.make         = result.make
     if (result.model)        form.model        = result.model
     if (result.variant)      form.variant      = result.variant
@@ -40,7 +40,7 @@ async function lookupVehicle() {
     if (result.fuel)         form.fuel         = result.fuel
     if (result.body)         form.body         = result.body
     if (result.transmission) form.transmission = result.transmission
-    if (result.drivetrain)   form.drivetrain   = result.drivetrain ?? ''
+    if (result.drivetrain)   form.drivetrain   = result.drivetrain
     form.plate = plate
     lookupSuccess.value = true
   } catch (err: unknown) {
@@ -64,6 +64,7 @@ async function lookupVehicle() {
 // Form state
 // ---------------------------------------------------------------------------
 interface FormState {
+  seller_id: string
   title: string
   make: string
   model: string
@@ -75,12 +76,13 @@ interface FormState {
   body: string
   transmission: string
   drivetrain: string
-  location: string
+  location_county: string
   description: string
   plate: string
 }
 
 const form = reactive<FormState>({
+  seller_id: '',
   title: '',
   make: '',
   model: '',
@@ -92,7 +94,7 @@ const form = reactive<FormState>({
   body: '',
   transmission: '',
   drivetrain: '',
-  location: '',
+  location_county: '',
   description: '',
   plate: plateInput.value,
 })
@@ -108,6 +110,7 @@ watch([() => form.make, () => form.model, () => form.year], ([make, model, year]
 // Validation
 // ---------------------------------------------------------------------------
 interface ValidationErrors {
+  seller_id?: string
   title?: string
   make?: string
   model?: string
@@ -116,7 +119,7 @@ interface ValidationErrors {
   fuel?: string
   body?: string
   transmission?: string
-  location?: string
+  location_county?: string
 }
 
 const errors = reactive<ValidationErrors>({})
@@ -126,6 +129,8 @@ const submitPending = ref(false)
 function validate(): boolean {
   const e: ValidationErrors = {}
 
+  if (!form.seller_id || isNaN(Number(form.seller_id)) || Number(form.seller_id) < 1)
+                                  e.seller_id    = 'Seller ID is required'
   if (!form.title.trim())         e.title        = 'Title is required'
   if (!form.make.trim())          e.make         = 'Make is required'
   if (!form.model.trim())         e.model        = 'Model is required'
@@ -136,7 +141,7 @@ function validate(): boolean {
   if (!form.fuel)                 e.fuel         = 'Fuel type required'
   if (!form.body)                 e.body         = 'Body type required'
   if (!form.transmission)         e.transmission = 'Transmission required'
-  if (!form.location.trim())      e.location     = 'Location is required'
+  if (!form.location_county.trim()) e.location_county = 'Location is required'
 
   Object.assign(errors, e)
   return Object.keys(e).length === 0
@@ -157,22 +162,26 @@ async function submitListing() {
   submitPending.value = true
   submitError.value = null
 
-  const payload: CreateListingPayload = {
-    title:         form.title.trim(),
-    make:          form.make.trim(),
-    model:         form.model.trim(),
-    variant:       form.variant.trim() || undefined,
-    year:          Number(form.year),
+  const payload: ListingCreate = {
+    // TODO: derive from auth session once auth is wired into the frontend
+    seller_id: Number(form.seller_id),
+    vehicle: {
+      make:         form.make.trim(),
+      model:        form.model.trim(),
+      variant:      form.variant.trim() || undefined,
+      year:         Number(form.year),
+      fuel:         form.fuel as FuelType,
+      body:         form.body as BodyType,
+      transmission: form.transmission as TransmissionType,
+      drivetrain:   (form.drivetrain as DrivetrainType) || undefined,
+      plate:        form.plate.trim() || undefined,
+    },
+    title:          form.title.trim(),
+    description:    form.description.trim() || undefined,
     // Convert whole euros to integer cents
-    price_eur:     Math.round(Number(form.price_eur) * 100),
-    mileage_km:    form.mileage_km ? Number(form.mileage_km) : null,
-    fuel:          form.fuel as FuelType,
-    body:          form.body as BodyType,
-    transmission:  form.transmission as TransmissionType,
-    drivetrain:    form.drivetrain.trim() || undefined,
-    location:      form.location.trim(),
-    description:   form.description.trim() || undefined,
-    plate:         form.plate.trim() || undefined,
+    price_eur_cents: Math.round(Number(form.price_eur) * 100),
+    mileage_km:     form.mileage_km ? Number(form.mileage_km) : null,
+    location_county: form.location_county.trim() || undefined,
   }
 
   try {
@@ -197,33 +206,43 @@ async function submitListing() {
 }
 
 // ---------------------------------------------------------------------------
-// Options
+// Options — values MUST match backend enums exactly
 // ---------------------------------------------------------------------------
 const fuelOptions = [
-  { value: 'petrol',   label: 'Petrol' },
-  { value: 'diesel',   label: 'Diesel' },
-  { value: 'electric', label: 'Electric' },
-  { value: 'hybrid',   label: 'Hybrid' },
-  { value: 'phev',     label: 'Plug-in hybrid' },
-  { value: 'lpg',      label: 'LPG' },
-  { value: 'cng',      label: 'CNG' },
+  { value: 'petrol',        label: 'Petrol' },
+  { value: 'diesel',        label: 'Diesel' },
+  { value: 'electric',      label: 'Electric' },
+  { value: 'hybrid',        label: 'Hybrid' },
+  { value: 'plugin_hybrid', label: 'Plug-in hybrid' },
+  { value: 'lpg',           label: 'LPG' },
+  { value: 'cng',           label: 'CNG' },
+  { value: 'other',         label: 'Other' },
 ]
 
 const bodyOptions = [
   { value: 'sedan',       label: 'Sedan' },
   { value: 'hatchback',   label: 'Hatchback' },
-  { value: 'estate',      label: 'Estate' },
+  { value: 'wagon',       label: 'Wagon / Estate' },
   { value: 'suv',         label: 'SUV / Crossover' },
   { value: 'coupe',       label: 'Coupé' },
   { value: 'convertible', label: 'Convertible' },
   { value: 'minivan',     label: 'Minivan' },
   { value: 'pickup',      label: 'Pickup' },
+  { value: 'van',         label: 'Van' },
+  { value: 'other',       label: 'Other' },
 ]
 
 const transmissionOptions = [
-  { value: 'manual',    label: 'Manual' },
-  { value: 'automatic', label: 'Automatic' },
-  { value: 'semi-auto', label: 'Semi-automatic' },
+  { value: 'manual',        label: 'Manual' },
+  { value: 'automatic',     label: 'Automatic' },
+  { value: 'semi_automatic', label: 'Semi-automatic' },
+  { value: 'cvt',           label: 'CVT' },
+]
+
+const drivetrainOptions = [
+  { value: 'fwd', label: 'FWD (Front-wheel drive)' },
+  { value: 'rwd', label: 'RWD (Rear-wheel drive)' },
+  { value: 'awd', label: 'AWD (All-wheel drive)' },
 ]
 
 const currentYear = new Date().getFullYear()
@@ -276,6 +295,29 @@ const yearOptions = Array.from({ length: 35 }, (_, i) => currentYear - i)
 
       <!-- Listing form -->
       <form class="listing-form" novalidate @submit.prevent="submitListing">
+
+        <!-- Seller info -->
+        <section class="form-section">
+          <h2 class="form-section__title">Seller information</h2>
+          <div class="form-grid">
+            <div class="field">
+              <label class="field__label" for="seller_id">Seller ID <span class="required" aria-hidden="true">*</span></label>
+              <!-- TODO: derive from auth session once auth is wired into the frontend -->
+              <input
+                id="seller_id"
+                v-model="form.seller_id"
+                class="field__input"
+                :class="{ 'field__input--error': errors.seller_id }"
+                type="number"
+                min="1"
+                placeholder="Your user ID"
+                required
+                @input="clearError('seller_id')"
+              />
+              <p v-if="errors.seller_id" class="field__error" role="alert">{{ errors.seller_id }}</p>
+            </div>
+          </div>
+        </section>
 
         <!-- Basic info -->
         <section class="form-section">
@@ -454,13 +496,14 @@ const yearOptions = Array.from({ length: 35 }, (_, i) => currentYear - i)
 
             <div class="field">
               <label class="field__label" for="drivetrain">Drivetrain</label>
-              <input
+              <select
                 id="drivetrain"
                 v-model="form.drivetrain"
-                class="field__input"
-                type="text"
-                placeholder="e.g. FWD, AWD, 4WD"
-              />
+                class="field__input field__select"
+              >
+                <option value="">Unknown / not specified</option>
+                <option v-for="opt in drivetrainOptions" :key="opt.value" :value="opt.value">{{ opt.label }}</option>
+              </select>
             </div>
           </div>
         </section>
@@ -470,18 +513,18 @@ const yearOptions = Array.from({ length: 35 }, (_, i) => currentYear - i)
           <h2 class="form-section__title">Location & description</h2>
           <div class="form-grid">
             <div class="field">
-              <label class="field__label" for="location">Location <span class="required" aria-hidden="true">*</span></label>
+              <label class="field__label" for="location_county">Location <span class="required" aria-hidden="true">*</span></label>
               <input
-                id="location"
-                v-model="form.location"
+                id="location_county"
+                v-model="form.location_county"
                 class="field__input"
-                :class="{ 'field__input--error': errors.location }"
+                :class="{ 'field__input--error': errors.location_county }"
                 type="text"
                 placeholder="e.g. Tallinn, Harjumaa"
                 required
-                @input="clearError('location')"
+                @input="clearError('location_county')"
               />
-              <p v-if="errors.location" class="field__error" role="alert">{{ errors.location }}</p>
+              <p v-if="errors.location_county" class="field__error" role="alert">{{ errors.location_county }}</p>
             </div>
 
             <div class="field field--full">

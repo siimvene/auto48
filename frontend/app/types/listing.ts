@@ -7,59 +7,58 @@
 export type FuelType = 'petrol' | 'diesel' | 'hybrid' | 'plugin_hybrid' | 'electric' | 'lpg' | 'cng' | 'other'
 export type BodyType = 'sedan' | 'hatchback' | 'wagon' | 'suv' | 'coupe' | 'convertible' | 'minivan' | 'pickup' | 'van' | 'other'
 export type TransmissionType = 'manual' | 'automatic' | 'semi_automatic' | 'cvt'
+export type DrivetrainType = 'fwd' | 'rwd' | 'awd'
 export type ListingStatus = 'draft' | 'active' | 'sold' | 'expired'
 
-/** A single photo attached to a listing. `url` is a CDN-absolute URL. */
-export interface Photo {
+/** Nested vehicle object as returned within a ListingResponse. */
+export interface Vehicle {
   id: number
-  url: string
-  thumbnail_url: string
-  position: number
-  processed: boolean
-}
-
-/** Full listing as returned by GET /v1/listings/{id} */
-export interface Listing {
-  id: number
-  title: string
+  vin?: string
+  plate?: string
   make: string
   model: string
   variant?: string
   year: number
-  /** Price in integer cents EUR */
-  price_eur: number
-  mileage_km: number | null
   fuel: FuelType
   body: BodyType
   transmission: TransmissionType
-  drivetrain?: string
-  location: string
-  status: ListingStatus
+  drivetrain?: DrivetrainType
+  specs?: Record<string, unknown>
+}
+
+/** A single photo attached to a listing. `url` is a CDN-absolute URL. */
+export interface Photo {
+  id: number
+  listing_id: number
+  url: string
+  position: number
+  processed: boolean
+  created_at: string
+}
+
+/**
+ * Full listing as returned by GET /v1/listings/{id} and items in GET /v1/listings.
+ * Vehicle specs are in the nested `vehicle` object; photos are NOT embedded —
+ * fetch separately via GET /v1/listings/{id}/photos.
+ */
+export interface Listing {
+  id: number
+  seller_id: number
+  vehicle_id: number
+  title: string
   description?: string
-  photos: Photo[]
+  /** Price in integer cents EUR */
+  price_eur_cents: number
+  mileage_km?: number | null
+  location_county?: string
+  lat?: number
+  lon?: number
+  status: ListingStatus
+  vehicle: Vehicle
   /** ISO 8601 datetime */
   created_at: string
   /** ISO 8601 datetime */
   updated_at: string
-}
-
-/** Lightweight listing card returned by GET /v1/listings (list view) */
-export interface ListingCard {
-  id: number
-  title: string
-  make: string
-  model: string
-  year: number
-  /** Price in integer cents EUR */
-  price_eur: number
-  mileage_km: number | null
-  fuel: FuelType
-  body: BodyType
-  transmission: TransmissionType
-  location: string
-  status: ListingStatus
-  thumbnail_url: string | null
-  created_at: string
 }
 
 /** Paginated envelope used by all list endpoints */
@@ -76,22 +75,23 @@ export interface ListingsQuery {
   model?: string
   year_min?: number
   year_max?: number
+  /** Price filters are in cents */
   price_min?: number
   price_max?: number
   mileage_max?: number
   fuel?: FuelType
   body?: BodyType
   transmission?: TransmissionType
+  /** Plain location string, NOT location_county */
   location?: string
   q?: string
+  sort?: 'newest' | 'price_asc' | 'price_desc' | 'year_desc' | 'mileage_asc'
   limit?: number
   offset?: number
 }
 
-/** Result from GET /v1/vehicles/lookup?plate= */
+/** Result from GET /v1/vehicles/lookup?plate= or ?vin= */
 export interface VehicleLookup {
-  plate?: string
-  vin?: string
   make?: string
   model?: string
   variant?: string
@@ -99,30 +99,40 @@ export interface VehicleLookup {
   fuel?: FuelType
   body?: BodyType
   transmission?: TransmissionType
-  drivetrain?: string
+  drivetrain?: DrivetrainType
   engine_cc?: number
   power_kw?: number
   color?: string
   first_registered?: string
 }
 
-/** Payload for POST /v1/listings */
-export interface CreateListingPayload {
-  title: string
+/** Nested vehicle sub-object for POST /v1/listings */
+export interface VehicleCreate {
   make: string
   model: string
   variant?: string
   year: number
-  price_eur: number
-  mileage_km?: number | null
   fuel: FuelType
   body: BodyType
   transmission: TransmissionType
-  drivetrain?: string
-  location: string
-  description?: string
-  plate?: string
+  drivetrain?: DrivetrainType
   vin?: string
+  plate?: string
+  specs?: Record<string, unknown>
+}
+
+/** Payload for POST /v1/listings */
+export interface ListingCreate {
+  seller_id: number
+  vehicle: VehicleCreate
+  title: string
+  description?: string
+  /** Price in integer cents EUR */
+  price_eur_cents: number
+  mileage_km?: number | null
+  location_county?: string
+  lat?: number
+  lon?: number
 }
 
 // ---------------------------------------------------------------------------

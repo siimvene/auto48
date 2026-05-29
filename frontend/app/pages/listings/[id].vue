@@ -1,53 +1,56 @@
 <script setup lang="ts">
-import { useListing } from '~/composables/useListings'
+import { useListing, useListingPhotos } from '~/composables/useListings'
 import { formatEur, formatMileage } from '~/types/listing'
 
 const route = useRoute()
 const id = computed(() => route.params.id as string)
 
 const { data: listing, pending, error } = useListing(id)
+const { data: photos } = useListingPhotos(id)
 
 useSeoMeta({
   title: computed(() =>
     listing.value ? `${listing.value.title} — auto48` : 'Listing — auto48',
   ),
   description: computed(() =>
-    listing.value?.description ?? `${listing.value?.make ?? ''} ${listing.value?.model ?? ''} for sale`,
+    listing.value?.description
+      ?? `${listing.value?.vehicle?.make ?? ''} ${listing.value?.vehicle?.model ?? ''} for sale`,
   ),
 })
 
 // Gallery
 const activePhotoIndex = ref(0)
 const activePhoto = computed(() =>
-  listing.value?.photos?.[activePhotoIndex.value] ?? null,
+  photos.value?.[activePhotoIndex.value] ?? null,
 )
 
 function prevPhoto() {
-  if (!listing.value?.photos?.length) return
+  if (!photos.value?.length) return
   activePhotoIndex.value =
-    (activePhotoIndex.value - 1 + listing.value.photos.length) % listing.value.photos.length
+    (activePhotoIndex.value - 1 + photos.value.length) % photos.value.length
 }
 
 function nextPhoto() {
-  if (!listing.value?.photos?.length) return
-  activePhotoIndex.value = (activePhotoIndex.value + 1) % listing.value.photos.length
+  if (!photos.value?.length) return
+  activePhotoIndex.value = (activePhotoIndex.value + 1) % photos.value.length
 }
 
 // Specs table
 const specs = computed(() => {
   if (!listing.value) return []
   const l = listing.value
+  const v = l.vehicle
   return [
-    { label: 'Make', value: l.make },
-    { label: 'Model', value: l.model },
-    { label: 'Variant', value: l.variant ?? '—' },
-    { label: 'Year', value: String(l.year) },
+    { label: 'Make', value: v.make },
+    { label: 'Model', value: v.model },
+    { label: 'Variant', value: v.variant ?? '—' },
+    { label: 'Year', value: String(v.year) },
     { label: 'Mileage', value: formatMileage(l.mileage_km) },
-    { label: 'Fuel', value: l.fuel },
-    { label: 'Body', value: l.body },
-    { label: 'Transmission', value: l.transmission },
-    { label: 'Drivetrain', value: l.drivetrain ?? '—' },
-    { label: 'Location', value: l.location },
+    { label: 'Fuel', value: v.fuel },
+    { label: 'Body', value: v.body },
+    { label: 'Transmission', value: v.transmission },
+    { label: 'Drivetrain', value: v.drivetrain ?? '—' },
+    { label: 'Location', value: l.location_county ?? '—' },
   ].filter((s) => s.value && s.value !== '—' || s.value === '—')
 })
 
@@ -100,25 +103,25 @@ function contactSeller() {
         <div class="detail-main">
           <!-- Gallery -->
           <section class="gallery" aria-label="Listing photos">
-            <div class="gallery__main" role="img" :aria-label="`${listing.make} ${listing.model} photo ${activePhotoIndex + 1}`">
+            <div class="gallery__main" role="img" :aria-label="`${listing.vehicle.make} ${listing.vehicle.model} photo ${activePhotoIndex + 1}`">
               <img
                 v-if="activePhoto"
                 :src="activePhoto.url"
-                :alt="`${listing.make} ${listing.model} ${listing.year}`"
+                :alt="`${listing.vehicle.make} ${listing.vehicle.model} ${listing.vehicle.year}`"
                 class="gallery__img"
               />
               <div v-else class="gallery__empty" aria-hidden="true">No photos uploaded</div>
 
-              <template v-if="listing.photos.length > 1">
+              <template v-if="(photos?.length ?? 0) > 1">
                 <button class="gallery__arrow gallery__arrow--prev" type="button" aria-label="Previous photo" @click="prevPhoto">&#8249;</button>
                 <button class="gallery__arrow gallery__arrow--next" type="button" aria-label="Next photo" @click="nextPhoto">&#8250;</button>
-                <span class="gallery__counter">{{ activePhotoIndex + 1 }} / {{ listing.photos.length }}</span>
+                <span class="gallery__counter">{{ activePhotoIndex + 1 }} / {{ photos!.length }}</span>
               </template>
             </div>
 
-            <div v-if="listing.photos.length > 1" class="gallery__thumbs" role="list" aria-label="Photo thumbnails">
+            <div v-if="(photos?.length ?? 0) > 1" class="gallery__thumbs" role="list" aria-label="Photo thumbnails">
               <button
-                v-for="(photo, i) in listing.photos.slice(0, 8)"
+                v-for="(photo, i) in photos!.slice(0, 8)"
                 :key="photo.id"
                 class="gallery__thumb-btn"
                 :class="{ 'gallery__thumb-btn--active': i === activePhotoIndex }"
@@ -127,7 +130,7 @@ function contactSeller() {
                 :aria-pressed="i === activePhotoIndex"
                 @click="activePhotoIndex = i"
               >
-                <img :src="photo.thumbnail_url" :alt="`Thumbnail ${i + 1}`" class="gallery__thumb-img" loading="lazy" />
+                <img :src="photo.url" :alt="`Thumbnail ${i + 1}`" class="gallery__thumb-img" loading="lazy" />
               </button>
             </div>
           </section>
@@ -162,7 +165,7 @@ function contactSeller() {
             <h1 class="detail-title">{{ listing.title }}</h1>
 
             <div class="detail-price-row">
-              <span class="detail-price">{{ formatEur(listing.price_eur) }}</span>
+              <span class="detail-price">{{ formatEur(listing.price_eur_cents) }}</span>
 
               <!-- Deal score badge slot — wired in Phase 1b when ValuationPort is live -->
               <span
