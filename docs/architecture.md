@@ -53,7 +53,7 @@ a real adapter wired by config. The domain never imports a vendor SDK directly.
 
 | Port | Responsibility | Adapters (v1 → later) |
 |---|---|---|
-| `VehicleDataPort` | VIN decode + spec + history (odometer/inspection) by plate/VIN | **carVertical/autoDNA (v1)** → Transpordiamet via X-tee (later, premium) |
+| `VehicleDataPort` | VIN decode + spec + history (odometer/inspection) by plate/VIN | **carVertical/autoDNA (v1)** · direct Transpordiamet/X-tee adapter **parked** (backlog) |
 | `EidPort` | Identity verification + e-signature | stub (v1) → TARA / Smart-ID / Mobile-ID (when RIA approves) |
 | `ValuationPort` | Price estimate + deal score | v0 own-listing comparables → ML model / data partner |
 | `PaymentPort` | Subscriptions, promotions, deposits, escrow | **Stripe Connect (subs/escrow) + Montonio (local)** |
@@ -81,7 +81,7 @@ Transaction (listing, buyer, seller) ── deposit, Contract (e-signed via EidP
 ```
 
 ### Key invariants
-- A `Listing` references exactly one `Vehicle`; fields verified via `VehicleDataPort` are read-only.
+- A `Listing` references exactly one `Vehicle`; fields populated via `VehicleDataPort` are read-only.
 - `VehicleHistoryEvent`s are append-only and ordered by `occurred_at` → the trust timeline;
   a decreasing odometer raises a **rollback flag**.
 - Search index is derived state, rebuilt from Postgres (Postgres is the source of truth).
@@ -119,7 +119,7 @@ lands. Lead times (see [`feasibility.md`](feasibility.md)):
 | Dependency | Lead time | v1 approach |
 |---|---|---|
 | Vehicle data (carVertical/autoDNA) | ~1–2 weeks | **v1 source** for auto-fill + history |
-| Transpordiamet via X-tee | Months (legal entity + RIA + per-provider agreement) | Later premium adapter behind same port |
+| Transpordiamet via X-tee | Months (legal entity + RIA + per-provider agreement) | **Parked** (backlog); commercial adapter covers v1 |
 | eID (TARA/Smart-ID) | 3–6 weeks (RIA approval) | Stub in v1; start application week 1 |
 | Payments (Stripe Connect / Montonio) | 1–2 weeks | Phase 1b |
 | Valuation data (Autovista/OBV) | Weeks | Optional; v0 is own-listing comparables |

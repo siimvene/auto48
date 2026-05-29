@@ -28,8 +28,9 @@ These are general classifieds pain points, not reverse-engineered internals:
 ## The "10x" — six product pillars
 
 ### 1. Trust by default
-- **Registry-verified vehicle data**: auto-fill make/model/spec/first-registration from the
-  plate or VIN via the Estonian Transport Administration (Transpordiamet) adapter.
+- **Vehicle-data auto-fill**: pre-fill make/model/spec from the plate or VIN via a
+  `VehicleDataPort` adapter (commercial provider). *(The "registry-verified" tag and direct
+  registry sourcing are **parked** — see Parked/backlog in [`implementation-plan.md`](implementation-plan.md).)*
 - **History timeline**: ownership count, odometer readings over time (**mileage-rollback
   flag**), inspection (ülevaatus) history, import origin, write-off/damage markers.
 - **eID-verified sellers**: Smart-ID / Mobile-ID / ID-card verification → "verified" badge.
@@ -70,8 +71,9 @@ These are general classifieds pain points, not reverse-engineered internals:
 | **Monetization** | **Dealer subscriptions + promotions** | Free private listings stay free; revenue from pros + paid bumps |
 
 Trust data is sourced from a **commercial history adapter (carVertical/autoDNA)** in v1
-(obtainable in ~1–2 weeks); direct Transpordiamet/X-tee access is a later, premium track
-(months of bureaucracy). See [`feasibility.md`](feasibility.md).
+(obtainable in ~1–2 weeks). Direct Transpordiamet/X-tee sourcing and the "registry-verified"
+tag are **parked** (months of bureaucracy, uncertain payoff over the reseller API). See
+[`feasibility.md`](feasibility.md).
 
 ## MVP cut — trust-included marketplace loop
 
@@ -105,6 +107,6 @@ Everything beyond MVP is sequenced in [`implementation-plan.md`](implementation-
 ## How we measure "10x"
 
 - **Time-to-list** (target < 60s) · **time-to-first-lead** · **alert latency** (target < 60s).
-- **Trust coverage**: % listings with registry-verified data and a history timeline.
+- **Trust coverage**: % listings with vehicle-data auto-fill and a history timeline.
 - **Search success**: % sessions ending in a contact/save · zero-result rate.
 - **Valuation coverage & accuracy** · **buyer trust (CSAT)** · **fraud-report rate**.

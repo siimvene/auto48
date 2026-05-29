@@ -9,7 +9,7 @@ distinction is **weeks vs months** — it sets what lands in Phase 1 vs later.
 | Area | Verdict | v1 approach |
 |---|---|---|
 | Vehicle data — commercial (carVertical/autoDNA) | ✅ ~1–2 weeks | **v1 source** for VIN decode + spec + history |
-| Vehicle data — Transpordiamet via X-tee | ⛔ months (may be refused) | Later premium adapter behind same port |
+| Vehicle data — Transpordiamet via X-tee | ⛔ months (may be refused) | **Parked (backlog)** — commercial adapter covers v1 |
 | eID (TARA / Smart-ID / Mobile-ID) | ✅ 3–6 weeks | Stub v1; start RIA application week 1 |
 | Payments (Stripe Connect / Montonio) | ✅ 1–2 weeks | Phase 1b |
 | Valuation data (Autovista / OBV) | ✅ weeks (optional) | v0 = own-listing comparables |
@@ -23,7 +23,9 @@ readings *at inspection points* exist — but access is gated:
   agreement with Transpordiamet**. No public self-service API; no confirmed reseller for raw data.
 - Realistic setup: **4–8 weeks minimum, possibly months**, and may face negotiation friction or refusal.
 
-→ **Skip for v1.** Treat direct X-tee as a later premium source behind `VehicleDataPort`.
+→ **Parked (backlog).** No plain registry REST API exists — X-tee is the only official route, and
+the commercial adapter covers v1. Revisit only if an authoritative "registry-verified" guarantee or
+better per-lookup cost at scale justifies the onboarding. Adapter swap behind `VehicleDataPort`.
 
 ## 2. VIN decoding & vehicle-history providers (the v1 workaround)
 

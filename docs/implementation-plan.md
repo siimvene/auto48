@@ -35,7 +35,7 @@ RIA/TARA eID application; local `create_all`→Alembic. **Next: Phase 1b.**
 | 0 | Scaffold | Repo, standards, skeletons | ✅ done |
 | 1a | **Core + trust hook** | Find a trusted car ↔ list in <60s | Domain models + first migration, facet search (Postgres FTS), **`VehicleDataPort` auto-fill + history timeline (commercial adapter)**, accounts (email/OAuth, `EidPort` stub), photos (`MediaPort`/MinIO + worker), messaging, **CI** |
 | 1b | **Both-supply + monetization** | Dealer inventory + revenue | Dealer accounts + `FeedPort` (1 format) + ingest worker, `PaymentPort` (Stripe Connect: subs + promotions), `ValuationPort` v0 (own comparables) + deal-score, saved search + email alert |
-| 2 | **Trust depth** | Verified sellers + official data | `EidPort` go-live (verified badge), Transpordiamet/X-tee adapter, fraud signals (stolen/duplicate/scam) |
+| 2 | **Trust depth** | Verified sellers + fraud signals | `EidPort` go-live (seller verified badge), fraud signals (stolen/duplicate/scam). *Registry/X-tee vehicle verification → parked (backlog).* |
 | 3 | **Price intelligence** | Deal score + TCO | Valuation model, TCO calc, financing/insurance quotes (`InsurancePort`) |
 | 4 | **Discovery** | Find *the* car | Typesense/Meilisearch, saved-search real-time alerts, map + NL search, recommendations |
 | 5 | **Transactions** | Buy safely, end-to-end | Test-drive scheduling, deposit/escrow (`PaymentPort`), e-signed contract (`EidPort`), ownership transfer |
@@ -62,5 +62,14 @@ RIA/TARA eID application; local `create_all`→Alembic. **Next: Phase 1b.**
 - [x] Saved search + email alert (`NotifyPort` SMTP/stub) + alerts worker (`/v1/saved-searches`)
 - [x] Single Alembic migration for the 6 new tables; full suite 97 passing, mypy `--strict` clean, 28 routes
 - [ ] Frontend surfaces for 1b (dealer feed mgmt, deal-score badge wired to `/v1/valuations`, saved-search UI) — next frontend pass
+
+## Parked / backlog
+
+- **Registry-verified vehicle data ("verified" tag) + direct Transpordiamet/X-tee adapter.**
+  Parked 2026-05-29. Reason: X-tee is the only official programmatic route (no plain registry
+  REST API); it needs RIA membership + an X-Road security server + a per-registry agreement
+  (months, may be refused), and the commercial adapter (carVertical/autoDNA) already covers v1.
+  Revisit if/when we need an authoritative "registry-verified" guarantee or better per-lookup
+  cost at scale. The `VehicleDataPort` abstraction means this is an adapter swap, not a rewrite.
 
 > Update this file (don't assume prerequisites) before planning new work.
