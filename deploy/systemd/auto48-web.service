@@ -1,0 +1,21 @@
+[Unit]
+Description=auto48 Nuxt SSR frontend
+After=network-online.target auto48-api.service
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=auto48
+Group=auto48
+WorkingDirectory=/opt/auto48/app/frontend
+Environment=HOST=127.0.0.1
+Environment=PORT=3000
+Environment=NODE_ENV=production
+# Public base the browser uses to reach the API (through nginx → :8000).
+Environment=NUXT_PUBLIC_API_BASE=https://kekec.ee
+ExecStart=/usr/bin/node /opt/auto48/app/frontend/.output/server/index.mjs
+Restart=on-failure
+RestartSec=3
+
+[Install]
+WantedBy=multi-user.target

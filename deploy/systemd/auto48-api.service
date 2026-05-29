@@ -1,0 +1,19 @@
+[Unit]
+Description=auto48 FastAPI (uvicorn)
+After=network-online.target docker.service
+Wants=network-online.target
+Requires=docker.service
+
+[Service]
+Type=simple
+User=auto48
+Group=auto48
+WorkingDirectory=/opt/auto48/app
+# Secrets + AUTO48_* config. Read by systemd (root) before dropping to auto48.
+EnvironmentFile=/opt/auto48/.env
+ExecStart=/opt/auto48/venv/bin/uvicorn auto48.main:app --host 127.0.0.1 --port 8000 --workers 2
+Restart=on-failure
+RestartSec=3
+
+[Install]
+WantedBy=multi-user.target
