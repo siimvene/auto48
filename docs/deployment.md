@@ -7,6 +7,7 @@
 
 | | |
 |---|---|
+| **Domain** | `kekec.ee` |
 | **Host (IP)** | `178.105.234.239` |
 | **OS** | Ubuntu |
 | **SSH user** | `ubuntu` |
