@@ -6,6 +6,7 @@ no module-level singleton. Use the `get_settings()` factory (cached) everywhere.
 
 from functools import lru_cache
 
+from pydantic import field_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
@@ -15,6 +16,26 @@ class Settings(BaseSettings):
     app_name: str = "auto48"
     environment: str = "local"
     debug: bool = False
+
+    # Browser origins allowed to call the API (the Nuxt frontend runs on a
+    # different origin in dev). Override via AUTO48_CORS_ORIGINS as a
+    # comma-separated list in real environments. Never use "*" with credentials.
+    cors_origins: list[str] = [
+        "http://localhost:3000",
+        "http://localhost:3001",
+        "http://localhost:3002",
+        "http://127.0.0.1:3000",
+        "http://127.0.0.1:3001",
+        "http://127.0.0.1:3002",
+    ]
+
+    @field_validator("cors_origins", mode="before")
+    @classmethod
+    def _split_csv_origins(cls, v: object) -> object:
+        """Accept a comma-separated string from the environment."""
+        if isinstance(v, str):
+            return [origin.strip() for origin in v.split(",") if origin.strip()]
+        return v
 
     # Async SQLAlchemy URL. Defaults to local sqlite for zero-config dev;
     # set AUTO48_DATABASE_URL to a postgresql+asyncpg://... DSN in real envs.

@@ -1,0 +1,48 @@
+---
+description: Deployments happen only on the production server, never locally
+alwaysApply: true
+---
+# Deployment
+
+## Context
+
+- When deploying the application, applying migrations to a live database, building production artifacts for release, or restarting/rolling out services.
+- When asked to "deploy", "ship", "release", "push to prod", or "update the server".
+
+## Requirements
+
+- **All deployments run on the server, never locally.** The production host is the
+  only place where deploy steps (build, migrate, service restart, edge/TLS config)
+  are executed. Do not run deployment commands on a developer machine.
+- Local machines are for development and verification only: running the dev servers,
+  tests, lint/type checks, and the local zero-config SQLite/dev stack.
+- Follow the recorded deploy procedure in `.memspec/` (`memspec search deploy`) and the
+  `deploy/` scripts on the server. Schema changes are an Alembic deploy step executed
+  on the server — never `create_all` outside the gated local bootstrap.
+- If a deploy is requested, connect to the production server and run the documented
+  procedure there. If server access is unavailable, stop and report it — do not
+  improvise a local deployment.
+
+## Examples
+
+<example>
+  ```
+  // Good — deploy executed on the server
+  SSH to the prod host, then run the deploy/ procedure (git pull, build,
+  alembic upgrade head, restart services) on the server.
+  ```
+</example>
+
+<example type="invalid">
+  ```
+  // Bad — building/migrating against production from a local machine
+  npm run build && alembic upgrade head   # run locally pointed at prod
+  (Violates rule: deployments must run on the server, not locally)
+  ```
+</example>
+
+## Critical Rules
+
+- Deployments are server-only. Never deploy from a local machine.
+- Local = develop, test, verify. Server = build, migrate, release, restart.
+- Use the `deploy/` scripts and the `.memspec/` deploy procedure on the server.

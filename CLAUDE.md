@@ -81,6 +81,9 @@ npm install && npm run dev              # http://localhost:3000
 
 ## Workflow
 
+- **Deployments run only on the production server, never locally** (`.cursor/rules/common/deployment.mdc`).
+  Local machines are for development and verification; build/migrate/release/restart happen on the server
+  via the `deploy/` scripts + `.memspec/` deploy procedure.
 - Git: use `git --no-pager …` for log/diff/show (`.cursor/rules/ai-tools/git-commands.mdc`).
 - Finishing substantial work: run the **quality-check** skill (code-simplifier → security-check →
   code-review → validation) in `.cursor/skills/quality-check/`.
