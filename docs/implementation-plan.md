@@ -80,10 +80,16 @@ Backend slices implemented against the spec pillars (no external deps; auth-gate
   `GET|POST /v1/import-calculator`.
 - **Dealer analytics** (Phase 6): inventory/leads/test-drives/feed-health aggregates →
   `GET /v1/dealer/analytics`.
+- **Map / radius search** (Phase 4): haversine `GET /v1/listings/nearby?lat=&lon=&radius_km=`.
+- **Natural-language search** (Phase 4): rule-based ET/EN parser → `GET /v1/search?q=...`.
+- **Stolen-vehicle check** (Phase 2 trust): `StolenVehiclePort` (+stub) → `GET /v1/vehicles/{vin}/stolen-check`.
 
-45 API routes, 216 tests, mypy `--strict` clean, 4 migrations. Still open in these phases: eID go-live (external),
-Typesense/real-time alerts/map+NL search, escrow + e-signed contract (eID-gated), dealer CRM/analytics,
-i18n/EV-fields/PWA, and the matching frontend surfaces.
+48 API routes, 272 tests, mypy `--strict` clean, 4 migrations.
+
+Still open — NOT implementable without external access / running infra / frontend work:
+eID go-live + X-tee registry (external/parked), search-engine swap to Typesense/Meilisearch +
+real-time push alerts (infra), e-signed contract (eID-gated), i18n / EV structured fields / PWA,
+and the matching **frontend surfaces** for the new endpoints (frontend is under active redesign).
 
 ## Parked / backlog
 
