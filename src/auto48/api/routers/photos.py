@@ -17,11 +17,14 @@ from fastapi import APIRouter, HTTPException, UploadFile, status
 from sqlalchemy import func, select
 
 from auto48.adapters.media import get_media_adapter
-from auto48.api.dependencies import DbSession
+from auto48.api.dependencies import CurrentUser, DbSession
 from auto48.config import get_settings
 from auto48.models.listing import Listing
 from auto48.models.photo import Photo
 from auto48.models.photo_schemas import PhotoResponse
+from auto48.models.seller import SellerProfile
+from auto48.models.user import User
+from auto48.ports.media import MediaPort
 
 logger = logging.getLogger(__name__)
 
@@ -33,9 +36,19 @@ router = APIRouter(tags=["photos"])
 # ---------------------------------------------------------------------------
 
 
-def _media_adapter():  # type: ignore[return]
+def _media_adapter() -> MediaPort:
     """Return the configured MediaPort adapter (cached per process)."""
     return get_media_adapter(get_settings())
+
+
+async def _assert_owns_listing(db: DbSession, listing: Listing, user: User) -> None:
+    """403 unless `user` owns the seller profile behind `listing`."""
+    seller = await db.get(SellerProfile, listing.seller_id)
+    if seller is None or seller.user_id != user.id:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="You do not own this listing",
+        )
 
 
 # ---------------------------------------------------------------------------
@@ -52,14 +65,16 @@ async def upload_photo(
     listing_id: int,
     file: UploadFile,
     db: DbSession,
+    current_user: CurrentUser,
 ) -> PhotoResponse:
-    # 1. Verify listing exists
+    # 1. Verify listing exists and the caller owns it
     listing = await db.get(Listing, listing_id)
     if listing is None:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
             detail=f"Listing {listing_id} not found",
         )
+    await _assert_owns_listing(db, listing, current_user)
 
     # 2. Read file bytes
     data = await file.read()
@@ -114,13 +129,16 @@ async def list_photos(listing_id: int, db: DbSession) -> list[PhotoResponse]:
 
 
 @router.delete("/v1/photos/{photo_id}", status_code=status.HTTP_204_NO_CONTENT)
-async def delete_photo(photo_id: int, db: DbSession) -> None:
+async def delete_photo(photo_id: int, db: DbSession, current_user: CurrentUser) -> None:
     photo = await db.get(Photo, photo_id)
     if photo is None:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
             detail=f"Photo {photo_id} not found",
         )
+    listing = await db.get(Listing, photo.listing_id)
+    if listing is not None:
+        await _assert_owns_listing(db, listing, current_user)
 
     # Remove from object store
     try:

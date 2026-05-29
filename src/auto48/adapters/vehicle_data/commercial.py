@@ -12,6 +12,8 @@ Phase 1b checklist:
 
 from __future__ import annotations
 
+from typing import Any
+
 import httpx
 
 from auto48.ports.vehicle_data import VehicleData, VehicleHistoryRecord
@@ -76,7 +78,7 @@ class CommercialVehicleDataAdapter:
         )
 
     @staticmethod
-    def _parse_lookup(payload: dict) -> VehicleData:
+    def _parse_lookup(payload: dict[str, Any]) -> VehicleData:
         """Map vendor JSON → VehicleData.
 
         Expected shape (carVertical/autoDNA v1, to be confirmed):
@@ -91,7 +93,7 @@ class CommercialVehicleDataAdapter:
         raise NotImplementedError("_parse_lookup — implement in Phase 1b")
 
     @staticmethod
-    def _parse_history(payload: list[dict]) -> list[VehicleHistoryRecord]:
+    def _parse_history(payload: list[dict[str, Any]]) -> list[VehicleHistoryRecord]:
         """Map vendor JSON array → list[VehicleHistoryRecord].
 
         Expected shape (each item):

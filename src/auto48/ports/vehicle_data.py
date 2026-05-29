@@ -8,7 +8,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 from datetime import date, datetime
-from typing import Protocol
+from typing import Any, Protocol
 
 from auto48.models.history import HistoryEventType
 from auto48.models.vehicle import BodyType, Drivetrain, FuelType, Transmission
@@ -44,7 +44,7 @@ class VehicleHistoryRecord:
     occurred_at: datetime
     source: str
     odometer_km: int | None = None
-    detail: dict | None = None
+    detail: dict[str, Any] | None = None
 
 
 class VehicleDataPort(Protocol):

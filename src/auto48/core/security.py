@@ -7,6 +7,7 @@ Secret and expiry are read from Settings — never hard-coded at call sites.
 """
 
 from datetime import UTC, datetime, timedelta
+from typing import Any
 
 import jwt
 from pwdlib import PasswordHash
@@ -49,7 +50,7 @@ def create_access_token(sub: str, expires: timedelta | None = None) -> str:
     return jwt.encode(payload, settings.jwt_secret, algorithm="HS256")
 
 
-def decode_token(token: str) -> dict:
+def decode_token(token: str) -> dict[str, Any]:
     """Decode and verify a JWT.
 
     Raises ``jwt.PyJWTError`` on invalid/expired tokens — callers should

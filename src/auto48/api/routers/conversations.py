@@ -3,11 +3,9 @@
 Follows the thin-handler, RORO, and RFC 7807 error conventions from listings.py.
 """
 
-from typing import Annotated
+from fastapi import APIRouter, HTTPException, status
 
-from fastapi import APIRouter, HTTPException, Query, status
-
-from auto48.api.dependencies import DbSession
+from auto48.api.dependencies import CurrentUser, DbSession
 from auto48.models.messaging_schemas import (
     ConversationCreate,
     ConversationResponse,
@@ -28,13 +26,14 @@ router = APIRouter(prefix="/v1/conversations", tags=["conversations"])
 async def create_conversation(
     payload: ConversationCreate,
     db: DbSession,
+    current_user: CurrentUser,
 ) -> ConversationResponse:
-    """Start or return an existing conversation for a (listing, buyer) pair."""
+    """Start or return an existing conversation for the current buyer."""
     try:
         conversation = await start_conversation(
             db,
             listing_id=payload.listing_id,
-            buyer_id=payload.buyer_id,
+            buyer_id=current_user.id,
         )
     except ValueError as exc:
         raise HTTPException(
@@ -47,10 +46,10 @@ async def create_conversation(
 @router.get("", response_model=list[ConversationResponse])
 async def get_conversations_for_user(
     db: DbSession,
-    user_id: Annotated[int, Query()],
+    current_user: CurrentUser,
 ) -> list[ConversationResponse]:
-    """Return all conversations where user is buyer or seller."""
-    conversations = await list_conversations_for_user(db, user_id=user_id)
+    """Return all conversations where the current user is buyer or seller."""
+    conversations = await list_conversations_for_user(db, user_id=current_user.id)
     return [ConversationResponse.model_validate(c) for c in conversations]
 
 
@@ -81,8 +80,9 @@ async def create_message(
     conversation_id: int,
     payload: MessageCreate,
     db: DbSession,
+    current_user: CurrentUser,
 ) -> MessageResponse:
-    """Post a new message to a conversation."""
+    """Post a new message to a conversation as the current user."""
     # Guard empty body (Pydantic min_length gives 422; explicit check gives 400).
     if not payload.body.strip():
         raise HTTPException(
@@ -93,7 +93,7 @@ async def create_message(
         message = await post_message(
             db,
             conversation_id=conversation_id,
-            sender_id=payload.sender_id,
+            sender_id=current_user.id,
             body=payload.body,
         )
     except ValueError as exc:

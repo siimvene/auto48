@@ -4,6 +4,8 @@ Pure, testable functions that build SQLAlchemy select/filter expressions.
 No I/O here — callers inject the session and execute queries themselves.
 """
 
+from typing import Any
+
 from sqlalchemy import Select, and_, func, or_, select
 from sqlalchemy.orm import selectinload
 from sqlalchemy.sql import ColumnElement
@@ -12,7 +14,7 @@ from auto48.models.listing import Listing, ListingStatus
 from auto48.models.vehicle import BodyType, FuelType, Transmission, Vehicle
 
 # Allowlist for sort columns — ORDER BY is built from this dict, never from raw input.
-_SORT_COLUMNS: dict[str, list] = {
+_SORT_COLUMNS: dict[str, list[Any]] = {
     "newest": [Listing.created_at.desc(), Listing.id.desc()],
     "price_asc": [Listing.price_eur_cents.asc(), Listing.id.asc()],
     "price_desc": [Listing.price_eur_cents.desc(), Listing.id.desc()],

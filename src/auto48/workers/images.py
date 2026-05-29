@@ -23,8 +23,12 @@ from __future__ import annotations
 
 import io
 import logging
+from typing import TYPE_CHECKING
 
 import structlog
+
+if TYPE_CHECKING:
+    from arq.connections import RedisSettings
 
 logger = structlog.get_logger(__name__)
 
@@ -33,7 +37,7 @@ logger = structlog.get_logger(__name__)
 # ---------------------------------------------------------------------------
 
 
-async def process_image(ctx: dict, photo_id: int) -> None:  # noqa: ARG001
+async def process_image(ctx: dict[str, object], photo_id: int) -> None:  # noqa: ARG001
     """Download, process, and re-upload a listing photo.
 
     This is currently a stub; a full implementation would:
@@ -78,14 +82,14 @@ def _demo_resize_strip_exif(raw: bytes, max_px: int = 1920) -> bytes:
     """Resize *raw* image bytes to at most *max_px* on the long edge, strip EXIF."""
     from PIL import Image, ImageOps
 
-    img = Image.open(io.BytesIO(raw))
+    opened: Image.Image = Image.open(io.BytesIO(raw))
     # Strip EXIF by converting through data
-    img = ImageOps.exif_transpose(img)
+    img: Image.Image = ImageOps.exif_transpose(opened) or opened
 
     w, h = img.size
     if max(w, h) > max_px:
         scale = max_px / max(w, h)
-        img = img.resize((int(w * scale), int(h * scale)), Image.LANCZOS)
+        img = img.resize((int(w * scale), int(h * scale)), Image.Resampling.LANCZOS)
 
     buf = io.BytesIO()
     fmt = img.format or "JPEG"
@@ -102,7 +106,7 @@ class WorkerSettings:
     functions = [process_image]
 
     @property
-    def redis_settings(self):  # type: ignore[return]
+    def redis_settings(self) -> RedisSettings:
         from arq.connections import RedisSettings
 
         from auto48.config import get_settings

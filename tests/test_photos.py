@@ -18,6 +18,7 @@ from sqlalchemy import select
 import auto48.models as _models  # noqa: F401 — register all ORM tables
 from auto48.adapters.media.stub import StubMediaAdapter
 from auto48.api.routers import photos as photos_router
+from auto48.core.security import create_access_token
 from auto48.db import Base, async_session_factory, engine  # noqa: F401
 from auto48.models.listing import Listing
 from auto48.models.photo import Photo
@@ -91,9 +92,14 @@ async def photos_client():
         yield ac
 
 
+def _auth(user_id: int) -> dict[str, str]:
+    """Bearer header for a seeded user id (exercises the real CurrentUser dep)."""
+    return {"Authorization": f"Bearer {create_access_token(str(user_id))}"}
+
+
 @pytest.fixture
-async def listing_id(photos_client) -> int:  # noqa: ARG001 — ensures schema is created first
-    """Insert User + SellerProfile + Vehicle + Listing; return listing.id."""
+async def seeded(photos_client) -> tuple[int, int]:  # noqa: ARG001 — schema created first
+    """Insert User + SellerProfile + Vehicle + Listing; return (listing_id, owner_user_id)."""
     async with async_session_factory() as session:
         uid = next(_user_counter)
         user = User(email=f"photo_seller_{uid}@example.com", display_name="Photo Seller")
@@ -125,7 +131,7 @@ async def listing_id(photos_client) -> int:  # noqa: ARG001 — ensures schema i
         session.add(listing)
         await session.flush()
         await session.commit()
-        return listing.id
+        return listing.id, user.id
 
 
 # ---------------------------------------------------------------------------
@@ -133,11 +139,13 @@ async def listing_id(photos_client) -> int:  # noqa: ARG001 — ensures schema i
 # ---------------------------------------------------------------------------
 
 
-async def test_upload_photo_creates_row(photos_client, listing_id):
+async def test_upload_photo_creates_row(photos_client, seeded):
+    listing_id, owner_id = seeded
     img_bytes = _small_png()
     resp = await photos_client.post(
         f"/v1/listings/{listing_id}/photos",
         files={"file": ("test.png", img_bytes, "image/png")},
+        headers=_auth(owner_id),
     )
     assert resp.status_code == 201, resp.text
     body = resp.json()
@@ -153,24 +161,55 @@ async def test_upload_photo_creates_row(photos_client, listing_id):
     assert photo.url.startswith("http://stub-media")
 
 
-async def test_upload_photo_listing_not_found(photos_client):
-    img_bytes = _small_png()
+async def test_upload_photo_requires_auth(photos_client, seeded):
+    listing_id, _ = seeded
+    resp = await photos_client.post(
+        f"/v1/listings/{listing_id}/photos",
+        files={"file": ("test.png", _small_png(), "image/png")},
+    )
+    assert resp.status_code in (401, 403)
+
+
+async def test_upload_photo_non_owner_forbidden(photos_client, seeded):
+    listing_id, owner_id = seeded
+    # A different, existing user who does not own the listing.
+    async with async_session_factory() as session:
+        other = User(email=f"other_{next(_user_counter)}@example.com", display_name="Other")
+        session.add(other)
+        await session.flush()
+        await session.commit()
+        other_id = other.id
+    assert other_id != owner_id
+    resp = await photos_client.post(
+        f"/v1/listings/{listing_id}/photos",
+        files={"file": ("test.png", _small_png(), "image/png")},
+        headers=_auth(other_id),
+    )
+    assert resp.status_code == 403
+
+
+async def test_upload_photo_listing_not_found(photos_client, seeded):
+    _, owner_id = seeded
     resp = await photos_client.post(
         "/v1/listings/999999/photos",
-        files={"file": ("test.png", img_bytes, "image/png")},
+        files={"file": ("test.png", _small_png(), "image/png")},
+        headers=_auth(owner_id),
     )
     assert resp.status_code == 404
 
 
-async def test_list_photos(photos_client, listing_id):
+async def test_list_photos(photos_client, seeded):
+    listing_id, owner_id = seeded
     img_bytes = _small_png()
     # Upload two photos
     for _ in range(2):
         await photos_client.post(
             f"/v1/listings/{listing_id}/photos",
             files={"file": ("test.png", img_bytes, "image/png")},
+            headers=_auth(owner_id),
         )
 
+    # Listing photos are public — no auth required.
     resp = await photos_client.get(f"/v1/listings/{listing_id}/photos")
     assert resp.status_code == 200
     items = resp.json()
@@ -180,15 +219,17 @@ async def test_list_photos(photos_client, listing_id):
     assert positions == sorted(positions)
 
 
-async def test_delete_photo(photos_client, listing_id):
+async def test_delete_photo(photos_client, seeded):
+    listing_id, owner_id = seeded
     img_bytes = _small_png()
     upload = await photos_client.post(
         f"/v1/listings/{listing_id}/photos",
         files={"file": ("test.png", img_bytes, "image/png")},
+        headers=_auth(owner_id),
     )
     photo_id = upload.json()["id"]
 
-    del_resp = await photos_client.delete(f"/v1/photos/{photo_id}")
+    del_resp = await photos_client.delete(f"/v1/photos/{photo_id}", headers=_auth(owner_id))
     assert del_resp.status_code == 204
 
     # Confirm gone from DB
@@ -197,8 +238,9 @@ async def test_delete_photo(photos_client, listing_id):
     assert photo is None
 
 
-async def test_delete_photo_not_found(photos_client):
-    resp = await photos_client.delete("/v1/photos/999999")
+async def test_delete_photo_not_found(photos_client, seeded):
+    _, owner_id = seeded
+    resp = await photos_client.delete("/v1/photos/999999", headers=_auth(owner_id))
     assert resp.status_code == 404
 
 

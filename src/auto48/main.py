@@ -1,5 +1,6 @@
 """FastAPI application entrypoint: lifespan, RFC 7807 errors, router wiring."""
 
+from collections.abc import AsyncIterator
 from contextlib import asynccontextmanager
 
 from fastapi import FastAPI, HTTPException, Request
@@ -19,7 +20,7 @@ from auto48.db import Base, engine
 
 
 @asynccontextmanager
-async def lifespan(app: FastAPI):
+async def lifespan(app: FastAPI) -> AsyncIterator[None]:
     settings = get_settings()
     # Local dev convenience only. Real environments manage schema via Alembic
     # migrations as a separate deploy step — never create tables on every startup.

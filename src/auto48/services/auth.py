@@ -14,7 +14,8 @@ from auto48.models.user import User
 
 async def get_user_by_email(db: AsyncSession, email: str) -> User | None:
     """Return the User with *email* or None if not found."""
-    return await db.scalar(select(User).where(User.email == email))
+    user: User | None = await db.scalar(select(User).where(User.email == email))
+    return user
 
 
 async def register_user(

@@ -1,12 +1,18 @@
 """Vehicle aggregate: the physical car a listing references."""
 
+from __future__ import annotations
+
 import enum
 from datetime import datetime
+from typing import TYPE_CHECKING, Any
 
 from sqlalchemy import JSON, DateTime, Enum, Integer, String, func
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from auto48.db import Base
+
+if TYPE_CHECKING:
+    from auto48.models.listing import Listing
 
 
 class FuelType(enum.Enum):
@@ -73,9 +79,9 @@ class Vehicle(Base):
         Enum(Drivetrain, name="drivetrain", values_callable=_enum_values), default=None
     )
     # JSON (not JSONB) for sqlite compatibility; Postgres maps it to JSONB-capable JSON.
-    specs: Mapped[dict | None] = mapped_column(JSON, default=None)
+    specs: Mapped[dict[str, Any] | None] = mapped_column(JSON, default=None)
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), server_default=func.now()
     )
 
-    listings: Mapped[list["Listing"]] = relationship(back_populates="vehicle")  # noqa: F821
+    listings: Mapped[list[Listing]] = relationship(back_populates="vehicle")

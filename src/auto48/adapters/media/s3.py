@@ -43,7 +43,7 @@ class S3MediaAdapter:
         )
 
     @cached_property
-    def _client(self) -> _boto3_type.client:  # type: ignore[name-defined]
+    def _client(self) -> _boto3_type.client:  # noqa: F821
         import boto3  # deferred import — not required at import time
 
         return boto3.client(

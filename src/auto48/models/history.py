@@ -3,11 +3,20 @@
 import enum
 from collections.abc import Iterable
 from datetime import datetime
+from typing import Any, Protocol, runtime_checkable
 
 from sqlalchemy import JSON, DateTime, Enum, ForeignKey, Integer, String
 from sqlalchemy.orm import Mapped, mapped_column
 
 from auto48.db import Base
+
+
+@runtime_checkable
+class OdometerReading(Protocol):
+    """Structural protocol satisfied by VehicleHistoryEvent and VehicleHistoryRecord."""
+
+    occurred_at: datetime
+    odometer_km: int | None
 
 
 class HistoryEventType(enum.Enum):
@@ -35,11 +44,11 @@ class VehicleHistoryEvent(Base):
     )
     occurred_at: Mapped[datetime] = mapped_column(DateTime(timezone=True))
     odometer_km: Mapped[int | None] = mapped_column(Integer, default=None)
-    detail: Mapped[dict | None] = mapped_column(JSON, default=None)
+    detail: Mapped[dict[str, Any] | None] = mapped_column(JSON, default=None)
     source: Mapped[str] = mapped_column(String(128))
 
 
-def detect_rollback(events: Iterable[VehicleHistoryEvent]) -> bool:
+def detect_rollback(events: Iterable[OdometerReading]) -> bool:
     """True if odometer readings, ordered by occurred_at, ever decrease."""
     readings = [
         e.odometer_km

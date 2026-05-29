@@ -48,9 +48,9 @@ Locked decisions: **both-supply** (dealer feeds + free private listings), **trus
 - [x] Photo upload via `MediaPort` (Stub/S3) + processing worker (arq), graceful Redis-down
 - [x] Buyer↔seller messaging
 - [x] Frontend: browse/search/detail/create flows (scaffolded)
-- [ ] Reconcile frontend types/pages to backend's **nested-vehicle** response shape (`vehicle.make`, `price_eur_cents`, `location_county`) — verify end-to-end with `npm install` + live API
-- [ ] Wire auth (`CurrentUser`) into photos/messaging (currently accept explicit user ids); generate the migration for any model deltas; run mypy clean
-- [ ] Replace local `create_all` with `alembic upgrade head` in the dev path
+- [~] Reconcile frontend types/pages to backend's **nested-vehicle** response shape — in progress (verifying with `npm install` + build)
+- [x] Wire auth (`CurrentUser`) into photos (ownership-checked) and messaging (buyer/sender from token); mypy `--strict` clean; full suite 57 passing
+- [ ] Replace local `create_all` with `alembic upgrade head` — **deferred by decision**: `create_all` is gated to `environment == "local"` (dev/test convenience only); production already uses Alembic. Revisit if local/prod parity is needed.
 
 ### Phase 1b task seeds
 - [ ] Dealer accounts + `FeedPort` + one dealer feed format ingested by a worker

@@ -14,7 +14,7 @@ def get_media_adapter(settings: Settings) -> MediaPort:
     if settings.s3_endpoint and settings.s3_access_key and settings.s3_secret_key:
         from auto48.adapters.media.s3 import S3MediaAdapter
 
-        return S3MediaAdapter(  # type: ignore[return-value]
+        return S3MediaAdapter(
             endpoint_url=settings.s3_endpoint,
             access_key=settings.s3_access_key,
             secret_key=settings.s3_secret_key,
@@ -23,4 +23,4 @@ def get_media_adapter(settings: Settings) -> MediaPort:
 
     from auto48.adapters.media.stub import StubMediaAdapter
 
-    return StubMediaAdapter()  # type: ignore[return-value]
+    return StubMediaAdapter()

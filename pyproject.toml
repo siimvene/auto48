@@ -60,6 +60,10 @@ packages = ["auto48"]
 mypy_path = "src"
 strict = true
 
+[[tool.mypy.overrides]]
+module = ["boto3", "boto3.*"]
+ignore_missing_imports = true
+
 [tool.pytest.ini_options]
 asyncio_mode = "auto"
 testpaths = ["tests"]

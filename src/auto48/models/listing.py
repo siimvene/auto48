@@ -1,7 +1,10 @@
 """Listing aggregate: a vehicle offered for sale by a seller."""
 
+from __future__ import annotations
+
 import enum
 from datetime import datetime
+from typing import TYPE_CHECKING
 
 from sqlalchemy import (
     BigInteger,
@@ -17,6 +20,10 @@ from sqlalchemy import (
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from auto48.db import Base
+
+if TYPE_CHECKING:
+    from auto48.models.photo import Photo
+    from auto48.models.vehicle import Vehicle
 
 
 class ListingStatus(enum.Enum):
@@ -56,7 +63,7 @@ class Listing(Base):
         DateTime(timezone=True), server_default=func.now(), onupdate=func.now()
     )
 
-    vehicle: Mapped["Vehicle"] = relationship(back_populates="listings")  # noqa: F821
-    photos: Mapped[list["Photo"]] = relationship(  # noqa: F821
+    vehicle: Mapped[Vehicle] = relationship(back_populates="listings")
+    photos: Mapped[list[Photo]] = relationship(
         back_populates="listing", order_by="Photo.position"
     )

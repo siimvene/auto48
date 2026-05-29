@@ -1,6 +1,7 @@
 """Pydantic request/response schemas (RORO: objects in, objects out)."""
 
 from datetime import datetime
+from typing import Any
 
 from pydantic import BaseModel, ConfigDict, Field
 
@@ -19,7 +20,7 @@ class VehicleCreate(BaseModel):
     body: BodyType
     transmission: Transmission
     drivetrain: Drivetrain | None = None
-    specs: dict | None = None
+    specs: dict[str, Any] | None = None
 
 
 class VehicleResponse(BaseModel):
@@ -36,7 +37,7 @@ class VehicleResponse(BaseModel):
     body: BodyType
     transmission: Transmission
     drivetrain: Drivetrain | None = None
-    specs: dict | None = None
+    specs: dict[str, Any] | None = None
 
 
 class ListingCreate(BaseModel):

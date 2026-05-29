@@ -6,6 +6,7 @@ Kept separate from schemas.py (domain listing schemas) to avoid coupling.
 from __future__ import annotations
 
 from datetime import date, datetime
+from typing import Any
 
 from pydantic import BaseModel
 
@@ -39,7 +40,7 @@ class VehicleHistoryRecordResponse(BaseModel):
     occurred_at: datetime
     source: str
     odometer_km: int | None = None
-    detail: dict | None = None
+    detail: dict[str, Any] | None = None
 
     model_config = {"from_attributes": True}
 
