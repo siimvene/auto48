@@ -19,3 +19,27 @@ Keep entries general and reusable — not one-off, file-specific details.
 ---
 
 <!-- Add entries below. -->
+
+### Mistake: arq WorkerSettings.redis_settings defined as an instance @property
+arq reads `redis_settings` off the **class** (`arq auto48.workers.X.WorkerSettings`),
+so a `@property` hands arq the descriptor object, not a value → the worker
+crash-loops with `AttributeError: 'property' object has no attribute 'host'`.
+The API stays up (it enqueues via its own pool), so this hides unless you check
+worker logs. Found in production on first deploy.
+
+**Wrong**:
+```python
+class WorkerSettings:
+    functions = [process_image]
+
+    @property
+    def redis_settings(self) -> RedisSettings:
+        return RedisSettings.from_dsn(get_settings().redis_url)
+```
+
+**Correct**:
+```python
+class WorkerSettings:
+    functions = [process_image]
+    redis_settings = RedisSettings.from_dsn(get_settings().redis_url)  # class attribute
+```

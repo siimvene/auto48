@@ -109,13 +109,45 @@ reloads nginx after each renewal. nginx redirects `http://` and `www.` → `http
 To re-run on a fresh box or new domain: `sudo bash deploy/obtain-cert.sh` (edit the
 `server_name`/cert paths + the `-d` domains, or `--ip-address`, as needed).
 
-### Not yet done (deploy step)
+## Application (deployed)
 
-- **App code** (FastAPI + Nuxt) is not deployed yet — nginx upstreams `127.0.0.1:8000`
-  (backend) and `:3000` (frontend) are configured and waiting. No app service unit,
-  Python venv, or Node runtime exists on the box yet.
-- **Migrations**: run **Alembic** as a deploy step (`alembic upgrade head`) — never
-  `create_all` on startup outside `local`.
+`https://kekec.ee` runs **Phase 1a** (6 routers; pre-1b commit `08df477` plus the arq
+worker fix `630af45`). Deployed by `deploy/deploy-app.sh` from a clean `git archive`
+export to `/opt/auto48/app`, installed into `/opt/auto48/venv`. Three systemd units:
+
+| Unit | Runs | Bind |
+|---|---|---|
+| `auto48-api` | uvicorn `auto48.main:app` (2 workers) | `127.0.0.1:8000` |
+| `auto48-worker` | arq `auto48.workers.images.WorkerSettings` | → Redis |
+| `auto48-web` | Nuxt SSR (`node .output/server/index.mjs`) | `127.0.0.1:3000` |
+
+Service user `auto48`; secrets via `EnvironmentFile=/opt/auto48/.env`. Migrations applied
+(`alembic upgrade head` → `abd0726bfcd2`, 8 tables). Verified: `/health`, `/v1/listings`,
+and the SSR homepage all 200 over HTTPS; worker connected to Redis.
+
+```bash
+ssh auto48-prod 'sudo systemctl status auto48-api auto48-worker auto48-web'
+ssh auto48-prod 'sudo journalctl -u auto48-api -f'
+```
+
+### Redeploy
+
+Re-ship the export and re-run (idempotent):
+```bash
+git archive <ref> | ssh auto48-prod 'sudo tar -x -C /opt/auto48/app'
+ssh auto48-prod 'sudo bash /opt/auto48/app/deploy/deploy-app.sh'
+```
+> A clean `git archive 08df477` (1a) lacks the worker fix `630af45` — ship the fixed
+> `src/auto48/workers/images.py` on top, or deploy a ref that includes it.
+
+### Notes / follow-ups
+
+- `alembic check` reports benign "drift" — the PostGIS image's Tiger-geocoder tables
+  (`zcta5`, `cousub`, `pagc_rules`, …) aren't in the ORM. Add an `include_object` filter
+  in `alembic/env.py` so `check`/autogenerate ignore non-app tables.
+- **Migrations**: always run **Alembic** as a deploy step — never `create_all` outside `local`.
+- SSR fetches currently hairpin through `https://kekec.ee`; could point server-side calls
+  at `http://127.0.0.1:8000` later.
 
 > **Capacity note:** 4 GB / 2 vCPU runs Postgres + Redis + MinIO + nginx (and soon
 > FastAPI + Nuxt SSR) on one box — fine pre-launch; revisit before scaling traffic.

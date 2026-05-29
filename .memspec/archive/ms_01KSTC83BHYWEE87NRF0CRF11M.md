@@ -1,7 +1,7 @@
 ---
 id: ms_01KSTC83BHYWEE87NRF0CRF11M
 type: fact
-state: active
+state: corrected
 confidence: 0.7
 created: '2026-05-29T17:24:26.097Z'
 source: claude
@@ -12,6 +12,7 @@ tags:
   - nginx
   - production
 decay_after: '2026-08-27T17:24:26.099Z'
+corrected_by: ms_01KSTE8NH4P3S2WX77ZJ8J8YTP
 ---
 # Prod provisioned: Docker data stack + nginx TLS, domain kekec.ee
 
