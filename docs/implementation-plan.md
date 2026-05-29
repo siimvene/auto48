@@ -47,7 +47,8 @@ Locked decisions: **both-supply** (dealer feeds + free private listings), **trus
 - [ ] Accounts + auth (OAuth2/OIDC; `EidPort` interface stubbed); **start RIA/TARA application**
 - [ ] Photo upload via `MediaPort` (MinIO) + processing worker (arq)
 - [ ] Buyer↔seller messaging
-- [ ] Frontend: browse/search/detail/create flows
+- [x] Frontend: browse/search/detail/create flows (scaffolded)
+- [ ] Reconcile frontend types/pages to backend's **nested-vehicle** response shape (`vehicle.make`, `price_eur_cents`, `location_county`) — verify end-to-end with `npm install` + live API
 
 ### Phase 1b task seeds
 - [ ] Dealer accounts + `FeedPort` + one dealer feed format ingested by a worker

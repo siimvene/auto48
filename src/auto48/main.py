@@ -5,10 +5,10 @@ from contextlib import asynccontextmanager
 from fastapi import FastAPI, HTTPException, Request
 from fastapi.responses import JSONResponse
 
+from auto48 import models as _models  # noqa: F401  (register all ORM metadata)
 from auto48.api.routers import health, listings
 from auto48.config import get_settings
 from auto48.db import Base, engine
-from auto48.models import listing as _listing  # noqa: F401  (register model metadata)
 
 
 @asynccontextmanager

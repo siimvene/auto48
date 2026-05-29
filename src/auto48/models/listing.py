@@ -1,20 +1,62 @@
-"""Car listing ORM model — the example domain entity for the marketplace."""
+"""Listing aggregate: a vehicle offered for sale by a seller."""
 
+import enum
 from datetime import datetime
 
-from sqlalchemy import DateTime, Integer, String, func
-from sqlalchemy.orm import Mapped, mapped_column
+from sqlalchemy import (
+    BigInteger,
+    DateTime,
+    Enum,
+    Float,
+    ForeignKey,
+    Integer,
+    String,
+    Text,
+    func,
+)
+from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from auto48.db import Base
+
+
+class ListingStatus(enum.Enum):
+    DRAFT = "draft"
+    ACTIVE = "active"
+    SOLD = "sold"
+    EXPIRED = "expired"
 
 
 class Listing(Base):
     __tablename__ = "listings"
 
     id: Mapped[int] = mapped_column(primary_key=True)
-    make: Mapped[str] = mapped_column(String(64), index=True)
-    model: Mapped[str] = mapped_column(String(64), index=True)
-    year: Mapped[int] = mapped_column(Integer)
-    price_eur: Mapped[int] = mapped_column(Integer, index=True)
+    seller_id: Mapped[int] = mapped_column(ForeignKey("seller_profiles.id"), index=True)
+    vehicle_id: Mapped[int] = mapped_column(ForeignKey("vehicles.id"), index=True)
+    title: Mapped[str] = mapped_column(String(255))
+    description: Mapped[str | None] = mapped_column(Text, default=None)
+    # Money stored as integer EUR cents (project invariant).
+    price_eur_cents: Mapped[int] = mapped_column(BigInteger, index=True)
     mileage_km: Mapped[int | None] = mapped_column(Integer, default=None)
-    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
+    location_county: Mapped[str | None] = mapped_column(String(64), default=None)
+    # Plain floats now; PostGIS Point later.
+    lat: Mapped[float | None] = mapped_column(Float, default=None)
+    lon: Mapped[float | None] = mapped_column(Float, default=None)
+    status: Mapped[ListingStatus] = mapped_column(
+        Enum(
+            ListingStatus,
+            name="listing_status",
+            values_callable=lambda e: [m.value for m in e],
+        ),
+        default=ListingStatus.DRAFT,
+    )
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), server_default=func.now()
+    )
+    updated_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), server_default=func.now(), onupdate=func.now()
+    )
+
+    vehicle: Mapped["Vehicle"] = relationship(back_populates="listings")  # noqa: F821
+    photos: Mapped[list["Photo"]] = relationship(  # noqa: F821
+        back_populates="listing", order_by="Photo.position"
+    )

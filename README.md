@@ -39,6 +39,25 @@ npm install
 npm run dev   # http://localhost:3000
 ```
 
+### Local infrastructure (Docker)
+
+Postgres+PostGIS, Redis, and MinIO are provided via Docker Compose for local development:
+
+```bash
+docker compose up -d
+```
+
+| Service | URL / address | Credentials |
+|---------|--------------|-------------|
+| Postgres (PostGIS) | `localhost:5432` db `auto48` | user `auto48` / pw `auto48` |
+| Redis | `localhost:6379` | — |
+| MinIO S3 API | `http://localhost:9000` | key `auto48` / secret `auto48secret` |
+| MinIO console | `http://localhost:9001` | same credentials |
+
+The `createbuckets` one-shot container automatically creates the `auto48-media` bucket with public download access once MinIO is healthy.
+
+To use Postgres instead of the default SQLite, copy the commented-out vars from `.env.example` into `.env` after the containers are running.
+
 ### Tests & checks
 
 ```bash

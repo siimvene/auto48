@@ -10,8 +10,8 @@ from sqlalchemy import pool
 from auto48.config import get_settings
 from auto48.db import Base
 
-# Import models so their tables register on Base.metadata for autogenerate.
-from auto48.models import listing  # noqa: F401
+# Import the models package so every table registers on Base.metadata for autogenerate.
+from auto48 import models  # noqa: F401
 
 config = context.config
 config.set_main_option("sqlalchemy.url", get_settings().database_url)
