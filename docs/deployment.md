@@ -58,7 +58,49 @@ ssh-copy-id -i ~/.ssh/auto48_deploy.pub ubuntu@178.105.234.239
 Then harden `/etc/ssh/sshd_config` on the server: `PasswordAuthentication no`,
 `PermitRootLogin no`, and `sudo systemctl reload ssh`.
 
-## Notes
+## Provisioned components
 
-- Database schema changes deploy via **Alembic** as an explicit deploy step
-  (`alembic upgrade head`) — never `create_all` on startup outside `local`.
+Provision the box with `deploy/provision.sh` (idempotent; recipe in repo, secrets
+generated on-box). It installs the data layer via Docker Compose — mirroring the dev
+`docker-compose.yml` for parity — plus a host nginx/certbot edge, and locks the firewall.
+
+| Component | Version | Where | Exposure |
+|---|---|---|---|
+| Docker Engine + Compose | 29.x / v5.x | host (apt, official repo) | — |
+| PostgreSQL + PostGIS | **17 / 3.5** | container `auto48-db-1` | `127.0.0.1:5432` |
+| Redis | **8** (alpine, `requirepass`) | container `auto48-redis-1` | `127.0.0.1:6379` |
+| MinIO (S3 object store) | latest | container `auto48-minio-1` | `127.0.0.1:9000` (api) / `:9001` (console) |
+| nginx | 1.24 | host | public `:80` (`:443` after TLS) |
+| certbot | 5.x (snap) | host | — |
+
+**Security:** every data service binds to `127.0.0.1` only — never a public interface.
+The public edge is nginx (`ufw` allows just `22/80/443`). Verified externally: only 22 and
+80 are reachable; 5432/6379/9000 are blocked. Redis requires a password.
+
+### Secrets
+
+`/opt/auto48/.env` (root-only, `chmod 600`, **never committed**) holds generated
+Postgres/Redis/MinIO passwords, a JWT secret, and the `AUTO48_*` app config (DSNs point at
+`127.0.0.1`). Regenerated only if the file is absent — re-running `provision.sh` won't clobber it.
+
+### Managing the data stack
+
+```bash
+ssh auto48-prod
+cd /opt/auto48
+sudo docker compose -f docker-compose.prod.yml ps
+sudo docker compose -f docker-compose.prod.yml logs -f db
+sudo docker compose -f docker-compose.prod.yml --env-file .env up -d   # apply changes
+```
+
+### Not yet done (deploy step)
+
+- **App code** (FastAPI + Nuxt) is not deployed yet — nginx upstreams `127.0.0.1:8000`
+  (backend) and `:3000` (frontend) are configured and waiting.
+- **TLS**: point a domain at `178.105.234.239`, set `server_name` in
+  `/etc/nginx/sites-available/auto48.conf`, then `sudo certbot --nginx -d <domain>`.
+- **Migrations**: run **Alembic** as a deploy step (`alembic upgrade head`) — never
+  `create_all` on startup outside `local`.
+
+> **Capacity note:** 4 GB / 2 vCPU runs Postgres + Redis + MinIO + nginx (and soon
+> FastAPI + Nuxt SSR) on one box — fine pre-launch; revisit before scaling traffic.

@@ -1,0 +1,2 @@
+# Never commit on-box production secrets.
+.env
