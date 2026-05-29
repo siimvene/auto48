@@ -63,6 +63,22 @@ RIA/TARA eID application; local `create_all`→Alembic. **Next: Phase 1b.**
 - [x] Single Alembic migration for the 6 new tables; full suite 97 passing, mypy `--strict` clean, 28 routes
 - [ ] Frontend surfaces for 1b (dealer feed mgmt, deal-score badge wired to `/v1/valuations`, saved-search UI) — next frontend pass
 
+## Delivered cross-phase (via subagents, ahead of sequence)
+
+Backend slices implemented against the spec pillars (no external deps; auth-gated where noted):
+- **Fraud signals** (Phase 2 trust): duplicate-listing detection + underpriced-vs-market +
+  scam-text scoring → `GET /v1/listings/{id}/risk` (risk score/level/flags). `services/fraud.py`.
+- **TCO + financing + insurance** (Phase 3): `InsurancePort` (+ stub), `services/tco.py` →
+  `GET /v1/listings/{id}/tco`, `GET /v1/listings/{id}/financing`.
+- **Test-drive scheduling** (Phase 5 transactions): `TestDriveBooking` model + auth-gated
+  request/confirm/decline/cancel under `/v1/listings/{id}/test-drives` and `/v1/test-drives/*`.
+- **Recommendations / similar** (Phase 4 discovery): `GET /v1/listings/{id}/similar`,
+  `GET /v1/recommendations`. `services/recommendations.py`.
+
+38 API routes, 173 tests, mypy `--strict` clean. Still open in these phases: eID go-live (external),
+Typesense/real-time alerts/map+NL search, escrow + e-signed contract (eID-gated), dealer CRM/analytics,
+i18n/EV-fields/PWA, and the matching frontend surfaces.
+
 ## Parked / backlog
 
 - **Registry-verified vehicle data ("verified" tag) + direct Transpordiamet/X-tee adapter.**

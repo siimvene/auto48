@@ -27,6 +27,7 @@ from auto48.models.listing import Listing, ListingStatus
 from auto48.models.photo import Photo
 from auto48.models.saved_search import Alert, SavedSearch
 from auto48.models.seller import SellerProfile, SellerType
+from auto48.models.test_drive import TestDriveBooking, TestDriveStatus
 from auto48.models.user import User
 from auto48.models.vehicle import (
     BodyType,
@@ -59,6 +60,8 @@ __all__ = [
     "Subscription",
     "SubscriptionPlan",
     "SubscriptionStatus",
+    "TestDriveBooking",
+    "TestDriveStatus",
     "Transmission",
     "User",
     "Vehicle",
