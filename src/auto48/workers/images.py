@@ -23,12 +23,11 @@ from __future__ import annotations
 
 import io
 import logging
-from typing import TYPE_CHECKING
 
 import structlog
+from arq.connections import RedisSettings
 
-if TYPE_CHECKING:
-    from arq.connections import RedisSettings
+from auto48.config import get_settings
 
 logger = structlog.get_logger(__name__)
 
@@ -104,11 +103,8 @@ def _demo_resize_strip_exif(raw: bytes, max_px: int = 1920) -> bytes:
 
 class WorkerSettings:
     functions = [process_image]
-
-    @property
-    def redis_settings(self) -> RedisSettings:
-        from arq.connections import RedisSettings
-
-        from auto48.config import get_settings
-
-        return RedisSettings.from_dsn(get_settings().redis_url)
+    # arq reads `redis_settings` off the class, so it must be a RedisSettings
+    # value — an instance @property would hand arq the descriptor object and
+    # fail with "'property' object has no attribute 'host'". Evaluated at import;
+    # AUTO48_REDIS_URL is present in the worker's environment.
+    redis_settings = RedisSettings.from_dsn(get_settings().redis_url)
