@@ -60,17 +60,36 @@ These are general classifieds pain points, not reverse-engineered internals:
 - **EE/LV/LT** listings, multilingual (ET/EN/RU/LV/LT), **import-cost calculator**.
 - Mobile-first **PWA**, minimal ads, accessible (WCAG), fast.
 
-## MVP cut (Phase 1) — ship the marketplace loop
+## Locked decisions
 
-A buyer can **find** a car and **contact** a verified seller; a seller can **list** in under a minute.
+| Decision | Choice | Why it matters |
+|---|---|---|
+| **Cold-start supply** | **Both in parallel** — dealer feeds + free private listings | Feeds give instant inventory; free private listings are the wedge vs pay-to-list |
+| **MVP differentiation** | **Trust-included v1** — vehicle-data auto-fill + history timeline in v1 | Ships the actual wedge at launch, not a thin clone |
+| **Geography** | **Estonia-first** | Baltic (LV/LT) is Phase 7 |
+| **Monetization** | **Dealer subscriptions + promotions** | Free private listings stay free; revenue from pros + paid bumps |
 
+Trust data is sourced from a **commercial history adapter (carVertical/autoDNA)** in v1
+(obtainable in ~1–2 weeks); direct Transpordiamet/X-tee access is a later, premium track
+(months of bureaucracy). See [`feasibility.md`](feasibility.md).
+
+## MVP cut — trust-included marketplace loop
+
+A buyer can **find** a car, **trust its history**, and **contact** a seller; a seller can **list**
+in under a minute with most fields auto-filled. Phase 1 is split into two shippable increments:
+
+**Phase 1a — core + trust hook**
 - Listings: create/edit/search/detail, photos, core facets (make, model, year, price, mileage, fuel, body, transmission, location).
-- Accounts: email/OAuth now, **eID adapter interface** ready for Phase 2.
+- **Vehicle-data auto-fill + history timeline** (mileage-rollback flag) via `VehicleDataPort` — the v1 differentiator.
+- Accounts: email/OAuth now; **`EidPort` stubbed**, RIA/TARA application started in parallel.
 - Search: Postgres full-text + facets (swap to a dedicated engine in Phase 4).
-- Saved search + email alert (basic).
-- Rules-based valuation **v0** (median of comparable listings) behind the ValuationPort.
-- Dealer accounts + **one feed format** ingested by a background worker.
-- In-app messaging (buyer ↔ seller).
+- Photos via `MediaPort` (MinIO) + background image worker; buyer ↔ seller messaging.
+
+**Phase 1b — both-supply + monetization**
+- Dealer accounts + **one feed format** ingested by a background worker (`FeedPort`).
+- **Dealer subscriptions + paid promotions** via `PaymentPort` (Stripe Connect; Montonio local).
+- Rules-based valuation **v0** (median of own comparable listings) behind `ValuationPort` + deal-score badge.
+- Saved search + basic email alert.
 
 Everything beyond MVP is sequenced in [`implementation-plan.md`](implementation-plan.md).
 
@@ -78,6 +97,8 @@ Everything beyond MVP is sequenced in [`implementation-plan.md`](implementation-
 
 - No scraping or reverse-engineering of competitors. External data only via official/consented
   adapters (registry, eID, dealer feeds, licensed reference data).
+- **Valuation and price benchmarks come from our own listings + licensed history data only** —
+  never from scraping auto24/ss.lv/autoplius or any competitor.
 - No storing third-party personal data without a lawful basis (GDPR).
 - No dark patterns, no ad clutter, no pay-to-list walls for private sellers.
 
