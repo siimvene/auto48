@@ -2,8 +2,8 @@
 import type { ListingCreate, VehicleLookup, FuelType, BodyType, TransmissionType, DrivetrainType } from '~/types/listing'
 
 useSeoMeta({
-  title: 'Sell your car — auto48',
-  description: 'List your car in 60 seconds. Auto-fill make, model and specs from your plate number. Free for private sellers.',
+  title: 'Lisa kuulutus — auto48',
+  description: 'Lisa oma auto kuulutus 60 sekundiga. Täida mark, mudel ja andmed numbrimärgi järgi automaatselt. Eraisikule tasuta.',
 })
 
 const config = useRuntimeConfig()
@@ -49,11 +49,11 @@ async function lookupVehicle() {
     const status = (err as { statusCode?: number; status?: number })?.statusCode
       ?? (err as { status?: number })?.status
     if (status === 404) {
-      lookupError.value = 'Plate not found. Please fill in the details manually.'
+      lookupError.value = 'Numbrimärki ei leitud. Palun täida andmed käsitsi.'
     } else if (status === 503 || status === 501 || !status) {
-      lookupError.value = 'Auto-fill is not available yet — please fill in manually.'
+      lookupError.value = 'Automaatne täitmine pole veel saadaval — palun täida käsitsi.'
     } else {
-      lookupError.value = 'Look-up failed. Please fill in the details manually.'
+      lookupError.value = 'Otsing ebaõnnestus. Palun täida andmed käsitsi.'
     }
   } finally {
     lookupPending.value = false
@@ -130,18 +130,18 @@ function validate(): boolean {
   const e: ValidationErrors = {}
 
   if (!form.seller_id || isNaN(Number(form.seller_id)) || Number(form.seller_id) < 1)
-                                  e.seller_id    = 'Seller ID is required'
-  if (!form.title.trim())         e.title        = 'Title is required'
-  if (!form.make.trim())          e.make         = 'Make is required'
-  if (!form.model.trim())         e.model        = 'Model is required'
+                                  e.seller_id    = 'Müüja ID on kohustuslik'
+  if (!form.title.trim())         e.title        = 'Pealkiri on kohustuslik'
+  if (!form.make.trim())          e.make         = 'Mark on kohustuslik'
+  if (!form.model.trim())         e.model        = 'Mudel on kohustuslik'
   if (!form.year || isNaN(Number(form.year)) || Number(form.year) < 1900 || Number(form.year) > new Date().getFullYear() + 1)
-                                  e.year         = 'Valid year required'
+                                  e.year         = 'Sisesta kehtiv aasta'
   if (!form.price_eur || isNaN(Number(form.price_eur)) || Number(form.price_eur) < 1)
-                                  e.price_eur    = 'Valid price required'
-  if (!form.fuel)                 e.fuel         = 'Fuel type required'
-  if (!form.body)                 e.body         = 'Body type required'
-  if (!form.transmission)         e.transmission = 'Transmission required'
-  if (!form.location_county.trim()) e.location_county = 'Location is required'
+                                  e.price_eur    = 'Sisesta kehtiv hind'
+  if (!form.fuel)                 e.fuel         = 'Kütus on kohustuslik'
+  if (!form.body)                 e.body         = 'Keretüüp on kohustuslik'
+  if (!form.transmission)         e.transmission = 'Käigukast on kohustuslik'
+  if (!form.location_county.trim()) e.location_county = 'Asukoht on kohustuslik'
 
   Object.assign(errors, e)
   return Object.keys(e).length === 0
@@ -194,11 +194,11 @@ async function submitListing() {
   } catch (err: unknown) {
     const status = (err as { statusCode?: number })?.statusCode
     if (status === 422) {
-      submitError.value = 'Some fields are invalid. Please check your input.'
+      submitError.value = 'Mõned väljad on vigased. Palun kontrolli sisestust.'
     } else if (status === 401 || status === 403) {
-      submitError.value = 'You must be logged in to post a listing.'
+      submitError.value = 'Kuulutuse lisamiseks pead olema sisse logitud.'
     } else {
-      submitError.value = 'Could not create the listing. Please try again later.'
+      submitError.value = 'Kuulutuse loomine ebaõnnestus. Palun proovi hiljem uuesti.'
     }
   } finally {
     submitPending.value = false
@@ -209,40 +209,40 @@ async function submitListing() {
 // Options — values MUST match backend enums exactly
 // ---------------------------------------------------------------------------
 const fuelOptions = [
-  { value: 'petrol',        label: 'Petrol' },
-  { value: 'diesel',        label: 'Diesel' },
-  { value: 'electric',      label: 'Electric' },
-  { value: 'hybrid',        label: 'Hybrid' },
-  { value: 'plugin_hybrid', label: 'Plug-in hybrid' },
-  { value: 'lpg',           label: 'LPG' },
-  { value: 'cng',           label: 'CNG' },
-  { value: 'other',         label: 'Other' },
+  { value: 'petrol',        label: 'Bensiin' },
+  { value: 'diesel',        label: 'Diisel' },
+  { value: 'electric',      label: 'Elektri' },
+  { value: 'hybrid',        label: 'Hübriid' },
+  { value: 'plugin_hybrid', label: 'Pistikhübriid' },
+  { value: 'lpg',           label: 'Gaas (LPG)' },
+  { value: 'cng',           label: 'Gaas (CNG)' },
+  { value: 'other',         label: 'Muu' },
 ]
 
 const bodyOptions = [
-  { value: 'sedan',       label: 'Sedan' },
-  { value: 'hatchback',   label: 'Hatchback' },
-  { value: 'wagon',       label: 'Wagon / Estate' },
-  { value: 'suv',         label: 'SUV / Crossover' },
-  { value: 'coupe',       label: 'Coupé' },
-  { value: 'convertible', label: 'Convertible' },
-  { value: 'minivan',     label: 'Minivan' },
-  { value: 'pickup',      label: 'Pickup' },
-  { value: 'van',         label: 'Van' },
-  { value: 'other',       label: 'Other' },
+  { value: 'sedan',       label: 'Sedaan' },
+  { value: 'hatchback',   label: 'Luukpära' },
+  { value: 'wagon',       label: 'Universaal' },
+  { value: 'suv',         label: 'Maastur' },
+  { value: 'coupe',       label: 'Kupee' },
+  { value: 'convertible', label: 'Kabriolett' },
+  { value: 'minivan',     label: 'Mahtuniversaal' },
+  { value: 'pickup',      label: 'Pikap' },
+  { value: 'van',         label: 'Kaubik' },
+  { value: 'other',       label: 'Muu' },
 ]
 
 const transmissionOptions = [
-  { value: 'manual',        label: 'Manual' },
-  { value: 'automatic',     label: 'Automatic' },
-  { value: 'semi_automatic', label: 'Semi-automatic' },
-  { value: 'cvt',           label: 'CVT' },
+  { value: 'manual',        label: 'Manuaal' },
+  { value: 'automatic',     label: 'Automaat' },
+  { value: 'semi_automatic', label: 'Poolautomaat' },
+  { value: 'cvt',           label: 'Astmeteta (CVT)' },
 ]
 
 const drivetrainOptions = [
-  { value: 'fwd', label: 'FWD (Front-wheel drive)' },
-  { value: 'rwd', label: 'RWD (Rear-wheel drive)' },
-  { value: 'awd', label: 'AWD (All-wheel drive)' },
+  { value: 'fwd', label: 'Esivedu' },
+  { value: 'rwd', label: 'Tagavedu' },
+  { value: 'awd', label: 'Nelikvedu' },
 ]
 
 const currentYear = new Date().getFullYear()
@@ -250,21 +250,22 @@ const yearOptions = Array.from({ length: 35 }, (_, i) => currentYear - i)
 </script>
 
 <template>
-  <div class="sell-page">
+  <div>
+    <LightNav />
     <div class="sell-page__inner">
       <!-- Header -->
       <header class="sell-header">
-        <h1 class="sell-header__title">List your car in 60 seconds</h1>
-        <p class="sell-header__sub">Free for private sellers. Auto-fill from your plate, publish in minutes.</p>
+        <h1 class="sell-header__title">Lisa kuulutus 60 sekundiga</h1>
+        <p class="sell-header__sub">Eraisikule tasuta. Täida andmed numbrimärgi järgi automaatselt ja avalda minutitega.</p>
       </header>
 
       <!-- Plate lookup -->
       <section class="lookup-section" aria-label="Auto-fill from plate">
         <div class="lookup-card">
-          <div class="lookup-card__icon" aria-hidden="true">🔍</div>
+          <div class="lookup-card__icon" aria-hidden="true"><Icon name="search" :size="22" /></div>
           <div class="lookup-card__body">
-            <p class="lookup-card__title">Auto-fill from plate or VIN</p>
-            <p class="lookup-card__desc">Enter your plate and we'll pre-fill make, model, year and specs for you.</p>
+            <p class="lookup-card__title">Täida automaatselt numbrimärgi või VIN-i järgi</p>
+            <p class="lookup-card__desc">Sisesta numbrimärk ja täidame margi, mudeli, aasta ning tehnilised andmed sinu eest.</p>
           </div>
           <div class="lookup-card__input">
             <div class="lookup-input-group" role="group" aria-label="Plate lookup">
@@ -272,8 +273,8 @@ const yearOptions = Array.from({ length: 35 }, (_, i) => currentYear - i)
                 v-model="plateInput"
                 class="lookup-input"
                 type="text"
-                placeholder="e.g. 123ABC"
-                aria-label="Plate number"
+                placeholder="nt 123ABC"
+                aria-label="Numbrimärk"
                 maxlength="10"
                 @keydown.enter.prevent="lookupVehicle"
               />
@@ -284,11 +285,11 @@ const yearOptions = Array.from({ length: 35 }, (_, i) => currentYear - i)
                 @click="lookupVehicle"
               >
                 <span v-if="lookupPending" class="spinner" aria-hidden="true" />
-                {{ lookupPending ? 'Looking up…' : 'Look up' }}
+                {{ lookupPending ? 'Otsin…' : 'Otsi andmed' }}
               </button>
             </div>
             <p v-if="lookupError" class="lookup-error" role="alert">{{ lookupError }}</p>
-            <p v-else-if="lookupSuccess" class="lookup-success" role="status">Fields auto-filled — check and adjust below.</p>
+            <p v-else-if="lookupSuccess" class="lookup-success" role="status">Andmed täidetud — kontrolli ja täienda allpool.</p>
           </div>
         </div>
       </section>
@@ -298,10 +299,10 @@ const yearOptions = Array.from({ length: 35 }, (_, i) => currentYear - i)
 
         <!-- Seller info -->
         <section class="form-section">
-          <h2 class="form-section__title">Seller information</h2>
+          <h2 class="form-section__title">Müüja andmed</h2>
           <div class="form-grid">
             <div class="field">
-              <label class="field__label" for="seller_id">Seller ID <span class="required" aria-hidden="true">*</span></label>
+              <label class="field__label" for="seller_id">Müüja ID <span class="required" aria-hidden="true">*</span></label>
               <!-- TODO: derive from auth session once auth is wired into the frontend -->
               <input
                 id="seller_id"
@@ -310,7 +311,7 @@ const yearOptions = Array.from({ length: 35 }, (_, i) => currentYear - i)
                 :class="{ 'field__input--error': errors.seller_id }"
                 type="number"
                 min="1"
-                placeholder="Your user ID"
+                placeholder="Sinu kasutaja ID"
                 required
                 @input="clearError('seller_id')"
               />
@@ -321,18 +322,18 @@ const yearOptions = Array.from({ length: 35 }, (_, i) => currentYear - i)
 
         <!-- Basic info -->
         <section class="form-section">
-          <h2 class="form-section__title">Basic information</h2>
+          <h2 class="form-section__title">Põhiandmed</h2>
 
           <div class="form-grid">
             <div class="field field--full">
-              <label class="field__label" for="title">Listing title <span class="required" aria-hidden="true">*</span></label>
+              <label class="field__label" for="title">Kuulutuse pealkiri <span class="required" aria-hidden="true">*</span></label>
               <input
                 id="title"
                 v-model="form.title"
                 class="field__input"
                 :class="{ 'field__input--error': errors.title }"
                 type="text"
-                placeholder="e.g. Toyota Corolla 2019 — one owner, full service"
+                placeholder="nt Toyota Corolla 2019 — üks omanik, täielik hooldusajalugu"
                 maxlength="120"
                 required
                 aria-required="true"
@@ -343,14 +344,14 @@ const yearOptions = Array.from({ length: 35 }, (_, i) => currentYear - i)
             </div>
 
             <div class="field">
-              <label class="field__label" for="make">Make <span class="required" aria-hidden="true">*</span></label>
+              <label class="field__label" for="make">Mark <span class="required" aria-hidden="true">*</span></label>
               <input
                 id="make"
                 v-model="form.make"
                 class="field__input"
                 :class="{ 'field__input--error': errors.make }"
                 type="text"
-                placeholder="e.g. Toyota"
+                placeholder="nt Toyota"
                 required
                 @input="clearError('make')"
               />
@@ -358,14 +359,14 @@ const yearOptions = Array.from({ length: 35 }, (_, i) => currentYear - i)
             </div>
 
             <div class="field">
-              <label class="field__label" for="model">Model <span class="required" aria-hidden="true">*</span></label>
+              <label class="field__label" for="model">Mudel <span class="required" aria-hidden="true">*</span></label>
               <input
                 id="model"
                 v-model="form.model"
                 class="field__input"
                 :class="{ 'field__input--error': errors.model }"
                 type="text"
-                placeholder="e.g. Corolla"
+                placeholder="nt Corolla"
                 required
                 @input="clearError('model')"
               />
@@ -373,18 +374,18 @@ const yearOptions = Array.from({ length: 35 }, (_, i) => currentYear - i)
             </div>
 
             <div class="field">
-              <label class="field__label" for="variant">Variant / trim</label>
+              <label class="field__label" for="variant">Varustustase</label>
               <input
                 id="variant"
                 v-model="form.variant"
                 class="field__input"
                 type="text"
-                placeholder="e.g. 1.8 Hybrid Executive"
+                placeholder="nt 1.8 Hybrid Executive"
               />
             </div>
 
             <div class="field">
-              <label class="field__label" for="year">Year <span class="required" aria-hidden="true">*</span></label>
+              <label class="field__label" for="year">Aasta <span class="required" aria-hidden="true">*</span></label>
               <select
                 id="year"
                 v-model="form.year"
@@ -393,7 +394,7 @@ const yearOptions = Array.from({ length: 35 }, (_, i) => currentYear - i)
                 required
                 @change="clearError('year')"
               >
-                <option value="">Select year</option>
+                <option value="">Vali aasta</option>
                 <option v-for="y in yearOptions" :key="y" :value="String(y)">{{ y }}</option>
               </select>
               <p v-if="errors.year" class="field__error" role="alert">{{ errors.year }}</p>
@@ -403,10 +404,10 @@ const yearOptions = Array.from({ length: 35 }, (_, i) => currentYear - i)
 
         <!-- Price & mileage -->
         <section class="form-section">
-          <h2 class="form-section__title">Price & mileage</h2>
+          <h2 class="form-section__title">Hind ja läbisõit</h2>
           <div class="form-grid">
             <div class="field">
-              <label class="field__label" for="price">Asking price (€) <span class="required" aria-hidden="true">*</span></label>
+              <label class="field__label" for="price">Hind (€) <span class="required" aria-hidden="true">*</span></label>
               <div class="field__input-group">
                 <input
                   id="price"
@@ -417,7 +418,7 @@ const yearOptions = Array.from({ length: 35 }, (_, i) => currentYear - i)
                   min="1"
                   max="10000000"
                   step="1"
-                  placeholder="e.g. 12500"
+                  placeholder="nt 12500"
                   required
                   aria-describedby="price-prefix"
                   @input="clearError('price_eur')"
@@ -428,7 +429,7 @@ const yearOptions = Array.from({ length: 35 }, (_, i) => currentYear - i)
             </div>
 
             <div class="field">
-              <label class="field__label" for="mileage">Mileage (km)</label>
+              <label class="field__label" for="mileage">Läbisõit (km)</label>
               <input
                 id="mileage"
                 v-model="form.mileage_km"
@@ -436,7 +437,7 @@ const yearOptions = Array.from({ length: 35 }, (_, i) => currentYear - i)
                 type="number"
                 min="0"
                 max="2000000"
-                placeholder="e.g. 87000"
+                placeholder="nt 87000"
               />
             </div>
           </div>
@@ -444,10 +445,10 @@ const yearOptions = Array.from({ length: 35 }, (_, i) => currentYear - i)
 
         <!-- Vehicle specs -->
         <section class="form-section">
-          <h2 class="form-section__title">Vehicle specs</h2>
+          <h2 class="form-section__title">Tehnilised andmed</h2>
           <div class="form-grid">
             <div class="field">
-              <label class="field__label" for="fuel">Fuel type <span class="required" aria-hidden="true">*</span></label>
+              <label class="field__label" for="fuel">Kütus <span class="required" aria-hidden="true">*</span></label>
               <select
                 id="fuel"
                 v-model="form.fuel"
@@ -456,14 +457,14 @@ const yearOptions = Array.from({ length: 35 }, (_, i) => currentYear - i)
                 required
                 @change="clearError('fuel')"
               >
-                <option value="">Select fuel</option>
+                <option value="">Vali kütus</option>
                 <option v-for="opt in fuelOptions" :key="opt.value" :value="opt.value">{{ opt.label }}</option>
               </select>
               <p v-if="errors.fuel" class="field__error" role="alert">{{ errors.fuel }}</p>
             </div>
 
             <div class="field">
-              <label class="field__label" for="body">Body type <span class="required" aria-hidden="true">*</span></label>
+              <label class="field__label" for="body">Keretüüp <span class="required" aria-hidden="true">*</span></label>
               <select
                 id="body"
                 v-model="form.body"
@@ -472,14 +473,14 @@ const yearOptions = Array.from({ length: 35 }, (_, i) => currentYear - i)
                 required
                 @change="clearError('body')"
               >
-                <option value="">Select body</option>
+                <option value="">Vali keretüüp</option>
                 <option v-for="opt in bodyOptions" :key="opt.value" :value="opt.value">{{ opt.label }}</option>
               </select>
               <p v-if="errors.body" class="field__error" role="alert">{{ errors.body }}</p>
             </div>
 
             <div class="field">
-              <label class="field__label" for="transmission">Transmission <span class="required" aria-hidden="true">*</span></label>
+              <label class="field__label" for="transmission">Käigukast <span class="required" aria-hidden="true">*</span></label>
               <select
                 id="transmission"
                 v-model="form.transmission"
@@ -488,20 +489,20 @@ const yearOptions = Array.from({ length: 35 }, (_, i) => currentYear - i)
                 required
                 @change="clearError('transmission')"
               >
-                <option value="">Select transmission</option>
+                <option value="">Vali käigukast</option>
                 <option v-for="opt in transmissionOptions" :key="opt.value" :value="opt.value">{{ opt.label }}</option>
               </select>
               <p v-if="errors.transmission" class="field__error" role="alert">{{ errors.transmission }}</p>
             </div>
 
             <div class="field">
-              <label class="field__label" for="drivetrain">Drivetrain</label>
+              <label class="field__label" for="drivetrain">Vedu</label>
               <select
                 id="drivetrain"
                 v-model="form.drivetrain"
                 class="field__input field__select"
               >
-                <option value="">Unknown / not specified</option>
+                <option value="">Teadmata / määramata</option>
                 <option v-for="opt in drivetrainOptions" :key="opt.value" :value="opt.value">{{ opt.label }}</option>
               </select>
             </div>
@@ -510,17 +511,17 @@ const yearOptions = Array.from({ length: 35 }, (_, i) => currentYear - i)
 
         <!-- Location & description -->
         <section class="form-section">
-          <h2 class="form-section__title">Location & description</h2>
+          <h2 class="form-section__title">Asukoht ja kirjeldus</h2>
           <div class="form-grid">
             <div class="field">
-              <label class="field__label" for="location_county">Location <span class="required" aria-hidden="true">*</span></label>
+              <label class="field__label" for="location_county">Asukoht <span class="required" aria-hidden="true">*</span></label>
               <input
                 id="location_county"
                 v-model="form.location_county"
                 class="field__input"
                 :class="{ 'field__input--error': errors.location_county }"
                 type="text"
-                placeholder="e.g. Tallinn, Harjumaa"
+                placeholder="nt Tallinn, Harjumaa"
                 required
                 @input="clearError('location_county')"
               />
@@ -528,16 +529,16 @@ const yearOptions = Array.from({ length: 35 }, (_, i) => currentYear - i)
             </div>
 
             <div class="field field--full">
-              <label class="field__label" for="description">Description</label>
+              <label class="field__label" for="description">Kirjeldus</label>
               <textarea
                 id="description"
                 v-model="form.description"
                 class="field__input field__textarea"
                 rows="5"
-                placeholder="Tell buyers about the car's condition, history, what's been serviced recently, any extras…"
+                placeholder="Kirjelda auto seisukorda, ajalugu, hiljutisi hooldustöid ja lisavarustust…"
                 maxlength="4000"
               />
-              <p class="field__hint">{{ form.description.length }} / 4000 characters</p>
+              <p class="field__hint">{{ form.description.length }} / 4000 tähemärki</p>
             </div>
           </div>
         </section>
@@ -551,295 +552,131 @@ const yearOptions = Array.from({ length: 35 }, (_, i) => currentYear - i)
             :disabled="submitPending"
           >
             <span v-if="submitPending" class="spinner" aria-hidden="true" />
-            {{ submitPending ? 'Publishing…' : 'Publish listing' }}
+            {{ submitPending ? 'Avaldan…' : 'Avalda kuulutus' }}
           </button>
-          <p class="form-footer__note">Free for private sellers. No hidden fees.</p>
+          <p class="form-footer__note">Eraisikule tasuta. Ei mingeid varjatud tasusid.</p>
         </div>
       </form>
     </div>
+    <DarkFooter />
   </div>
 </template>
 
 <style scoped>
-.sell-page {
-  background: #f9fafb;
-  min-height: 100vh;
-  padding: 2rem 1.25rem 4rem;
-  font-family: system-ui, sans-serif;
-}
-
 .sell-page__inner {
   max-width: 760px;
   margin: 0 auto;
+  padding: 32px 20px 64px;
   display: flex;
   flex-direction: column;
-  gap: 2rem;
+  gap: 28px;
 }
 
 /* ---- Header ---- */
 .sell-header__title {
-  font-size: 1.75rem;
-  font-weight: 800;
-  color: #111;
-  margin: 0 0 0.35rem;
-  letter-spacing: -0.02em;
+  font-family: var(--space);
+  font-size: 34px;
+  font-weight: 700;
+  letter-spacing: -.025em;
+  color: var(--ink);
+  margin: 0 0 8px;
 }
-
-.sell-header__sub {
-  font-size: 1rem;
-  color: #6b7280;
-  margin: 0;
-}
+.sell-header__sub { font-size: 16px; color: var(--muted-l); margin: 0; }
 
 /* ---- Lookup card ---- */
 .lookup-card {
-  background: #eff6ff;
-  border: 1px solid #bfdbfe;
-  border-radius: 12px;
-  padding: 1.25rem;
+  background: var(--night);
+  color: #F3F7EC;
+  border: 1px solid var(--line-d);
+  border-radius: 16px;
+  padding: 22px;
   display: flex;
-  gap: 1rem;
+  gap: 18px;
   align-items: flex-start;
   flex-wrap: wrap;
 }
-
 .lookup-card__icon {
-  font-size: 1.5rem;
-  flex-shrink: 0;
-  line-height: 1;
-  margin-top: 0.1rem;
+  width: 44px; height: 44px; border-radius: 11px; flex-shrink: 0;
+  background: rgba(194, 238, 69, .14); color: var(--volt);
+  display: flex; align-items: center; justify-content: center;
 }
-
-.lookup-card__body { flex: 1; min-width: 200px; }
-.lookup-card__title { font-size: 0.95rem; font-weight: 700; color: #1e40af; margin: 0 0 0.2rem; }
-.lookup-card__desc  { font-size: 0.83rem; color: #3b82f6; margin: 0; }
-
-.lookup-card__input {
-  flex: 1;
-  min-width: 220px;
-  display: flex;
-  flex-direction: column;
-  gap: 0.4rem;
-}
-
-.lookup-input-group {
-  display: flex;
-  gap: 0.5rem;
-}
-
+.lookup-card__body { flex: 1; min-width: 220px; }
+.lookup-card__title { font-family: var(--space); font-size: 16px; font-weight: 600; color: #F3F7EC; margin: 0 0 4px; }
+.lookup-card__desc { font-size: 13.5px; color: var(--muted-d); margin: 0; }
+.lookup-card__input { flex: 1; min-width: 240px; display: flex; flex-direction: column; gap: 8px; }
+.lookup-input-group { display: flex; gap: 8px; }
 .lookup-input {
-  flex: 1;
-  padding: 0.55rem 0.75rem;
-  border: 1px solid #93c5fd;
-  border-radius: 7px;
-  font-size: 0.9rem;
-  font-family: inherit;
-  color: #111;
-  background: #fff;
-  text-transform: uppercase;
-  letter-spacing: 0.08em;
-  transition: border-color 0.15s, box-shadow 0.15s;
+  flex: 1; padding: 11px 14px; border-radius: 10px; border: 1px solid var(--line-d);
+  background: var(--night-2); color: #F3F7EC; font: inherit; font-size: 15px;
+  text-transform: uppercase; letter-spacing: .08em; transition: border-color .2s, box-shadow .2s;
 }
-
-.lookup-input:focus {
-  outline: none;
-  border-color: #2563eb;
-  box-shadow: 0 0 0 3px rgb(37 99 235 / 15%);
-}
-
-.lookup-error   { font-size: 0.8rem; color: #dc2626; margin: 0; }
-.lookup-success { font-size: 0.8rem; color: #166534; margin: 0; }
+.lookup-input::placeholder { color: var(--faint-d); letter-spacing: normal; text-transform: none; }
+.lookup-input:focus { outline: none; border-color: rgba(194, 238, 69, .5); box-shadow: 0 0 0 3px rgba(194, 238, 69, .12); }
+.lookup-error { font-size: 13px; color: #F2A98F; margin: 0; }
+.lookup-success { font-size: 13px; color: var(--volt); margin: 0; }
 
 /* ---- Form sections ---- */
-.listing-form { display: flex; flex-direction: column; gap: 1.5rem; }
-
+.listing-form { display: flex; flex-direction: column; gap: 16px; }
 .form-section {
-  background: #fff;
-  border: 1px solid #e5e7eb;
-  border-radius: 12px;
-  padding: 1.5rem;
+  background: var(--surface); border: 1px solid var(--line-l); border-radius: 16px; padding: 24px 26px;
 }
-
 .form-section__title {
-  font-size: 0.9rem;
-  font-weight: 700;
-  text-transform: uppercase;
-  letter-spacing: 0.05em;
-  color: #6b7280;
-  margin: 0 0 1.25rem;
+  font-family: var(--mono); font-size: 11.5px; font-weight: 600; letter-spacing: .08em;
+  text-transform: uppercase; color: var(--faint-l); margin: 0 0 18px;
 }
+.form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+@media (max-width: 560px) { .form-grid { grid-template-columns: 1fr; } }
 
-.form-grid {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 1rem;
-}
-
-@media (max-width: 560px) {
-  .form-grid { grid-template-columns: 1fr; }
-}
-
-.field { display: flex; flex-direction: column; gap: 0.3rem; }
+.field { display: flex; flex-direction: column; gap: 6px; }
 .field--full { grid-column: 1 / -1; }
-
-.field__label {
-  font-size: 0.85rem;
-  font-weight: 600;
-  color: #374151;
-}
-
-.required { color: #dc2626; }
+.field__label { font-size: 13.5px; font-weight: 600; color: var(--ink); }
+.required { color: var(--neg); }
 
 .field__input {
-  padding: 0.575rem 0.75rem;
-  border: 1px solid #d1d5db;
-  border-radius: 7px;
-  font-size: 0.9rem;
-  font-family: inherit;
-  color: #111;
-  background: #fafafa;
-  transition: border-color 0.15s, box-shadow 0.15s, background 0.15s;
-  width: 100%;
-  box-sizing: border-box;
+  padding: 11px 14px; border: 1px solid var(--line-l); border-radius: 10px; font: inherit; font-size: 15px;
+  color: var(--ink); background: var(--page); transition: border-color .2s, box-shadow .2s, background .2s;
+  width: 100%; box-sizing: border-box;
 }
-
 .field__input:focus {
-  outline: none;
-  border-color: #2563eb;
-  box-shadow: 0 0 0 3px rgb(37 99 235 / 12%);
-  background: #fff;
+  outline: none; border-color: var(--volt-2); box-shadow: 0 0 0 3px rgba(174, 224, 43, .16); background: var(--surface);
 }
-
-.field__input--error {
-  border-color: #f87171;
-  background: #fff5f5;
-}
-
+.field__input--error { border-color: var(--neg); background: rgba(192, 73, 43, .06); }
 .field__select { cursor: pointer; }
-
-.field__textarea {
-  resize: vertical;
-  min-height: 120px;
-  line-height: 1.6;
-}
-
-.field__input-group {
-  position: relative;
-  display: flex;
-  align-items: center;
-}
-
+.field__textarea { resize: vertical; min-height: 130px; line-height: 1.6; }
+.field__input-group { position: relative; display: flex; align-items: center; }
 .field__input--prefix { padding-right: 2rem; }
-
-.field__input-addon {
-  position: absolute;
-  right: 0.75rem;
-  font-size: 0.9rem;
-  color: #9ca3af;
-  pointer-events: none;
-}
-
-.field__error {
-  font-size: 0.78rem;
-  color: #dc2626;
-  margin: 0;
-}
-
-.field__hint {
-  font-size: 0.75rem;
-  color: #9ca3af;
-  text-align: right;
-  margin: 0;
-}
+.field__input-addon { position: absolute; right: 14px; font-size: 15px; color: var(--faint-l); pointer-events: none; }
+.field__error { font-size: 12.5px; color: var(--neg); margin: 0; }
+.field__hint { font-size: 12px; color: var(--faint-l); text-align: right; margin: 0; }
 
 /* ---- Form footer ---- */
-.form-footer {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 0.75rem;
-  padding-top: 0.5rem;
-}
-
+.form-footer { display: flex; flex-direction: column; align-items: center; gap: 12px; padding-top: 4px; }
 .submit-error {
-  font-size: 0.875rem;
-  color: #dc2626;
-  text-align: center;
-  margin: 0;
-  padding: 0.75rem 1rem;
-  background: #fff5f5;
-  border: 1px solid #fca5a5;
-  border-radius: 8px;
-  width: 100%;
-  box-sizing: border-box;
+  font-size: 14px; color: var(--neg); text-align: center; margin: 0; padding: 12px 16px;
+  background: rgba(192, 73, 43, .07); border: 1px solid rgba(192, 73, 43, .3); border-radius: 10px;
+  width: 100%; box-sizing: border-box;
 }
+.form-footer__note { font-size: 13px; color: var(--faint-l); margin: 0; }
 
-.form-footer__note {
-  font-size: 0.78rem;
-  color: #9ca3af;
-  margin: 0;
-}
-
-/* ---- Buttons ---- */
+/* ---- Buttons (page-local variants on top of global btn-* ) ---- */
 .btn {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  gap: 0.5rem;
-  font-weight: 600;
-  border-radius: 8px;
-  cursor: pointer;
-  border: none;
-  text-decoration: none;
-  transition: background 0.15s, box-shadow 0.15s;
-  font-family: inherit;
+  display: inline-flex; align-items: center; justify-content: center; gap: 8px; font-weight: 700;
+  border-radius: 11px; cursor: pointer; border: none; text-decoration: none; font-family: inherit;
+  transition: background .2s, transform .15s, opacity .2s;
 }
-
-.btn:disabled {
-  opacity: 0.55;
-  cursor: not-allowed;
-}
-
-.btn--primary {
-  background: #2563eb;
-  color: #fff;
-  padding: 0.7rem 1.5rem;
-  font-size: 0.95rem;
-}
-
-.btn--primary:hover:not(:disabled) {
-  background: #1d4ed8;
-  box-shadow: 0 2px 8px rgb(37 99 235 / 30%);
-}
-
+.btn:disabled { opacity: .55; cursor: not-allowed; }
+.btn--primary { background: var(--volt); color: var(--volt-ink); padding: 12px 22px; font-size: 15px; }
+.btn--primary:hover:not(:disabled) { background: var(--volt-2); transform: translateY(-1px); }
 .btn--secondary {
-  background: #fff;
-  color: #2563eb;
-  border: 1.5px solid #2563eb;
-  padding: 0.5rem 1rem;
-  font-size: 0.875rem;
+  background: var(--volt); color: var(--volt-ink); padding: 10px 16px; font-size: 14px; white-space: nowrap;
 }
-
-.btn--secondary:hover:not(:disabled) {
-  background: #eff6ff;
-}
-
-.btn--lg {
-  padding: 0.875rem 2.5rem;
-  font-size: 1.05rem;
-}
+.btn--secondary:hover:not(:disabled) { background: var(--volt-2); }
+.btn--lg { padding: 15px 40px; font-size: 16px; }
 
 /* ---- Spinner ---- */
 @keyframes spin { to { transform: rotate(360deg); } }
-
 .spinner {
-  display: inline-block;
-  width: 1em;
-  height: 1em;
-  border: 2px solid currentColor;
-  border-top-color: transparent;
-  border-radius: 50%;
-  animation: spin 0.7s linear infinite;
-  flex-shrink: 0;
+  display: inline-block; width: 1em; height: 1em; border: 2px solid currentColor;
+  border-top-color: transparent; border-radius: 50%; animation: spin .7s linear infinite; flex-shrink: 0;
 }
 </style>

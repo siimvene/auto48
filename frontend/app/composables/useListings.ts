@@ -54,10 +54,10 @@ export function useListing(id: Ref<string | number> | ComputedRef<string | numbe
     pending,
     error,
     refresh,
-  } = useFetch<Listing>(() => `/v1/listings/${toValue(id)}`, {
+  } = useFetch<Listing | null>(() => `/v1/listings/${toValue(id)}`, {
     baseURL: config.public.apiBase,
     key,
-    default: (): null => null,
+    default: (): Listing | null => null,
   })
 
   return {
