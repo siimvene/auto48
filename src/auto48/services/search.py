@@ -115,7 +115,7 @@ def build_listing_query(
     stmt = (
         select(Listing)
         .join(Listing.vehicle)
-        .options(selectinload(Listing.vehicle))
+        .options(selectinload(Listing.vehicle), selectinload(Listing.photos))
         .order_by(*order_exprs)
         .limit(limit)
         .offset(offset)

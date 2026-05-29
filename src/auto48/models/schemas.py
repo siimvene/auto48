@@ -67,6 +67,9 @@ class ListingResponse(BaseModel):
     lon: float | None = None
     status: ListingStatus
     vehicle: VehicleResponse
+    # First photo (lowest position), set by the router on list/detail responses so
+    # cards can show a thumbnail without a separate /photos request per listing.
+    thumbnail_url: str | None = None
     created_at: datetime
     updated_at: datetime
 

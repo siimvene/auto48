@@ -38,7 +38,7 @@ const showFair = computed(() => props.valuate && fairness.value.key !== 'unknown
     :aria-label="`${listing.vehicle.make} ${listing.vehicle.model}, ${formatEur(listing.price_eur_cents)}`"
   >
     <div style="position: relative;">
-      <CarPhoto :seed="listing.id" :alt="`${listing.vehicle.make} ${listing.vehicle.model}`" />
+      <CarPhoto :url="listing.thumbnail_url" :seed="listing.id" :alt="`${listing.vehicle.make} ${listing.vehicle.model}`" />
       <span v-if="listing.status === 'sold'" class="vbadge">Müüdud</span>
       <button
         type="button"

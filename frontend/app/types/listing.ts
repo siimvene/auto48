@@ -55,6 +55,8 @@ export interface Listing {
   lon?: number
   status: ListingStatus
   vehicle: Vehicle
+  /** First photo URL (lowest position), for card thumbnails; null if none. */
+  thumbnail_url?: string | null
   /** ISO 8601 datetime */
   created_at: string
   /** ISO 8601 datetime */

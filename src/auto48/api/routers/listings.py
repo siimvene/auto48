@@ -21,6 +21,13 @@ from auto48.services.search import build_count_query, build_filters, build_listi
 router = APIRouter(prefix="/v1/listings", tags=["listings"])
 
 
+def _to_response(record: Listing) -> ListingResponse:
+    """ListingResponse with thumbnail_url from the first photo (photos must be loaded)."""
+    resp = ListingResponse.model_validate(record)
+    resp.thumbnail_url = record.photos[0].url if record.photos else None
+    return resp
+
+
 @router.get("", response_model=Page)
 async def list_listings(
     db: DbSession,
@@ -99,7 +106,7 @@ async def list_listings(
     rows = (await db.scalars(build_listing_query(filters, sort, limit, offset))).all()
 
     return Page(
-        items=[ListingResponse.model_validate(r) for r in rows],
+        items=[_to_response(r) for r in rows],
         total=total or 0,
         limit=limit,
         offset=offset,
@@ -111,14 +118,14 @@ async def get_listing(listing_id: int, db: DbSession) -> ListingResponse:
     record = await db.scalar(
         select(Listing)
         .where(Listing.id == listing_id)
-        .options(selectinload(Listing.vehicle))
+        .options(selectinload(Listing.vehicle), selectinload(Listing.photos))
     )
     if record is None:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
             detail=f"Listing {listing_id} not found",
         )
-    return ListingResponse.model_validate(record)
+    return _to_response(record)
 
 
 @router.post("", response_model=ListingResponse, status_code=status.HTTP_201_CREATED)
