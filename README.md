@@ -1,7 +1,7 @@
 # auto48
 
 An open car marketplace for the Estonian/Baltic market — a competitor to
-[auto24.ee](https://www.auto24.ee).
+[auto24.ee](https://www.auto24.ee). Live at **[kekec.ee](https://kekec.ee)**.
 
 - **Backend:** FastAPI · Python 3.12+ · async SQLAlchemy 2.0 · Alembic
 - **Frontend:** Nuxt 4 · Vue 3 (Composition API)
